@@ -1,11 +1,11 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { GolfPhysicsSimulator } from "@/lib/physics/simulator"
+import { createSimulator } from "@/lib/physics"
 import { EVENT_TRACK } from "@/lib/api/telemetry"
 import { security } from "@/lib/api/security"
 import { sessionManager } from "@/lib/api/sessionManager"
 import type { ApiResponse, PlayRequest, PlayResponse, AwardedCoupon } from "@/lib/api/types"
 
-const simulator = new GolfPhysicsSimulator()
+// Note: Simulator will be created per request with session-specific configuration
 
 // Mock coupon data for reference
 const COUPON_DATA = {
@@ -198,7 +198,8 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Run deterministic simulation
+    // Run deterministic simulation using CourseManager configuration
+    const simulator = createSimulator() // Create with CourseManager config
     const result = simulator.simulate({
       angle,
       power,

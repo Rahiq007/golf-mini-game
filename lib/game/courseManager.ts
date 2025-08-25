@@ -171,8 +171,9 @@ export class CourseManager {
         x: this.currentCourse.holePosition.x, 
         y: this.currentCourse.holePosition.z 
       },
-      // Use base radius for hole detection - if ball is inside, it wins!
-      holeRadius: (this.currentCourse.holeDiameter / 2) * multipliers.holeRadius
+      // Use generous radius for hole detection - if ball is visually in the hole, it wins!
+      // Make the physics hole radius slightly larger than the visual hole for better UX
+      holeRadius: Math.max(0.3, (this.currentCourse.holeDiameter / 2) * multipliers.holeRadius)
     }
   }
 

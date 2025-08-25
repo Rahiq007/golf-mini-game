@@ -5,7 +5,7 @@ export const HARD_PHYSICS_CONFIG: PhysicsConfig = {
   VMAX: 28, // Reduced from 30 - less maximum velocity
   friction: 0.025, // Increased from 0.015 - more friction
   holePosition: { x: 45, y: 0 }, // Default, will be overridden by course
-  holeRadius: 0.15, // Much smaller than 0.25 - harder to hit
+  holeRadius: 0.25, // Increased to match visual hole size
   tolerance: 0.01, // Reduced from 0.02 - requires more precision
   windMaxMagnitude: 5, // Increased from 3 - stronger wind effects
   maxSimTime: 15,

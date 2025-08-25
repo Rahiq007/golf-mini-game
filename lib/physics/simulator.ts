@@ -75,6 +75,17 @@ export class GolfPhysicsSimulator {
 
     this.rng.reset(input.seed)
 
+    // Debug: Log current physics configuration
+    console.log('[PHYSICS] Starting simulation with config:', {
+      holePosition: this.config.holePosition,
+      holeRadius: this.config.holeRadius,
+      tolerance: this.config.tolerance,
+      totalWinRadius: this.config.holeRadius + this.config.tolerance,
+      angle: input.angle * (180 / Math.PI), // Convert to degrees for readability
+      power: input.power,
+      seed: input.seed
+    })
+
     // Calculate initial velocity from angle and power with realistic scaling
     const initialSpeed = input.power * this.config.VMAX
     const initialVelocity: Vector2D = {
@@ -209,12 +220,12 @@ export class GolfPhysicsSimulator {
       )
 
       // WIN DETECTION: Ball must be inside the hole to win
-      // Using base radius for detection - if ball is inside, it's a WIN!
+      // Using radius + tolerance for more forgiving detection - if ball is visually in the hole, it's a WIN!
       // NO SPEED RESTRICTION - fast balls can still go in!
-      const holeWinRadius = this.config.holeRadius // Use base radius for win detection
+      const holeWinRadius = this.config.holeRadius + this.config.tolerance // Use base radius plus tolerance for win detection
       
       // Ball must be INSIDE the hole and on the ground - SPEED DOESN'T MATTER!
-      if (distanceToHole < holeWinRadius && currentState.isRolling) {
+      if (distanceToHole <= holeWinRadius && currentState.isRolling) {
         // Ball is IN THE HOLE - it's a WIN no matter the speed!
         stoppedReason = "hole"
         console.log('[PHYSICS] Ball IN HOLE - WIN!', {
@@ -227,19 +238,28 @@ export class GolfPhysicsSimulator {
       }
       
       // Log near misses for debugging
-      if (distanceToHole <= this.config.holeRadius * 2 && currentState.isRolling) {
-        const isInHole = distanceToHole < holeWinRadius
+      if (distanceToHole <= this.config.holeRadius * 3 && currentState.isRolling) {
+        const isInHole = distanceToHole <= holeWinRadius
         if (isInHole) {
           console.log('[PHYSICS] Ball ENTERING HOLE', {
             distance: distanceToHole.toFixed(3),
-            holeRadius: holeWinRadius.toFixed(3),
-            speed: currentSpeed.toFixed(3)
+            holeWinRadius: holeWinRadius.toFixed(3),
+            baseHoleRadius: this.config.holeRadius.toFixed(3),
+            tolerance: this.config.tolerance.toFixed(3),
+            speed: currentSpeed.toFixed(3),
+            position: `(${currentState.position.x.toFixed(2)}, ${currentState.position.y.toFixed(2)})`,
+            holePosition: `(${this.config.holePosition.x}, ${this.config.holePosition.y})`
           })
         } else {
           console.log('[PHYSICS] Ball NEAR hole but NOT IN', {
             distance: distanceToHole.toFixed(3),
-            holeRadius: holeWinRadius.toFixed(3),
-            speed: currentSpeed.toFixed(3)
+            holeWinRadius: holeWinRadius.toFixed(3),
+            baseHoleRadius: this.config.holeRadius.toFixed(3),
+            tolerance: this.config.tolerance.toFixed(3),
+            speed: currentSpeed.toFixed(3),
+            position: `(${currentState.position.x.toFixed(2)}, ${currentState.position.y.toFixed(2)})`,
+            holePosition: `(${this.config.holePosition.x}, ${this.config.holePosition.y})`,
+            shortfall: `Ball needs to be ${(holeWinRadius - distanceToHole).toFixed(3)} units closer`
           })
         }
       }
