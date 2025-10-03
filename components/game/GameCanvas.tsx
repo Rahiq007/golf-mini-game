@@ -501,14 +501,30 @@ export default function GameCanvas({
     let ballInHole = false
     const holePos = scene.metadata?.holePosition || { x: 45, z: 0 }
     const holeDiameter = scene.metadata?.actualHoleDiameter || 0.5
-    
+
+    // let every_fifty_frames = 0;
     trajectory.forEach((state, index) => {
       let ballPos = new Vector3(
         state.position.x,
         Math.max(state.position.y + 0.1, 0.1),
-        state.position.y * 0.1
+        //state.position.y * 0.1    // TODO:
+        state.position.z   // FIXME: Have to update to a corresponding z-axis 
       )
-      
+
+      // Code to help follow the trajectory of the ball.
+      // if (every_fifty_frames % 30 == 0) {
+      //   const ball2 = MeshBuilder.CreateSphere("ball", { diameter: 0.2, segments: 16 }, scene) // Larger for visibility
+      //   ball2.position = new Vector3(state.position.x, Math.max(state.position.y + 0.1, 0.1), state.position.z)// Sitting on tee
+      //   const ball2Material = new StandardMaterial("ballMat", scene)
+      //   ball2Material.diffuseColor = new Color3(1, 0, 0) // Pure white ball
+      //   ball2Material.specularColor = new Color3(0.9, 0.9, 0.9)
+      //   ball2Material.specularPower = 128
+      //   ball2Material.emissiveColor = new Color3(0.1, 0.1, 0.1) // Slight glow for visibility
+      //   ball2.material = ball2Material
+      // }
+      // ++every_fifty_frames
+
+
       // Check if ball is inside the hole to trigger drop animation
       const distToHole = Math.sqrt(
         Math.pow(ballPos.x - holePos.x, 2) + 

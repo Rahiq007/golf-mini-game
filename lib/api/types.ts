@@ -25,6 +25,7 @@ export interface PlayRequest {
   sessionId: string
   input: {
     angle: number
+    anglePhi: number // TODO:
     power: number
     timestamp: number
   }
