@@ -55,7 +55,7 @@ export const GOLF_COURSES: CourseConfig[] = [
     name: 'Desert Dunes',
     difficulty: 'hard',
     holeDistance: 50,
-    holePosition: new Vector3(50, 0, 2), // Slightly off-center
+    holePosition: new Vector3(50, 0, 4), // Slightly off-center
     holeDiameter: 0.25, // Smaller hole - harder
     windStrength: 4, // More wind
     fairwayWidth: 4, // Narrower fairway
@@ -111,7 +111,7 @@ export const GOLF_COURSES: CourseConfig[] = [
     name: 'Mountain Peak',
     difficulty: 'medium',
     holeDistance: 42,
-    holePosition: new Vector3(42, 0.5, 1), // Elevated hole
+    holePosition: new Vector3(42, 0, 1),
     holeDiameter: 0.32,
     windStrength: 3,
     fairwayWidth: 4.5,
@@ -166,10 +166,12 @@ export class CourseManager {
       windMaxMagnitude: HARD_PHYSICS_CONFIG.windMaxMagnitude * multipliers.windMaxMagnitude,
       airResistance: HARD_PHYSICS_CONFIG.airResistance * multipliers.airResistance,
       rollResistance: HARD_PHYSICS_CONFIG.rollResistance * multipliers.rollResistance,
-      // Convert Vector3 to Vector2D for physics (x,z -> x,y)
+      
+      // Use Vector3 to perform Vector3D calculations.
       holePosition: { 
         x: this.currentCourse.holePosition.x, 
-        y: this.currentCourse.holePosition.z 
+        y: this.currentCourse.holePosition.y,
+        z: this.currentCourse.holePosition.z
       },
       // Use generous radius for hole detection - if ball is visually in the hole, it wins!
       // Make the physics hole radius slightly larger than the visual hole for better UX

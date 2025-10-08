@@ -15,8 +15,8 @@ interface GameControlsProps {
 }
 
 export default function GameControls({ onShoot, disabled = false, className = "" }: GameControlsProps) {
-  const [angle, setAngle] = useState(30) // Degrees - lower default angle // TODO: 8 -> 30
-  const [anglePhi, setAnglePhi] = useState(45)  // TODO: added 45 to check if anglePhi being passed.
+  const [angle, setAngle] = useState(8) // Degrees - lower default angle
+  const [anglePhi, setAnglePhi] = useState(45)  // Degrees - angling left/right.
   const [power, setPower] = useState(0.5) // 0-1 - reduced default power
   const [isDragging, setIsDragging] = useState(false)
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 })

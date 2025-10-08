@@ -67,15 +67,14 @@ export async function POST(request: NextRequest) {
   try {
     const body: PlayRequest = await request.json()
     const { sessionId, input } = body
-    const { angle, anglePhi, power, timestamp } = input  // TODO:
-    console.log("Entered the try within api/mock/play/rout.ts")
+    const { angle, anglePhi, power, timestamp } = input
 
     EVENT_TRACK(
       "play_attempt",
       {
         sessionId,
         angle,
-        anglePhi,  // TODO:
+        anglePhi,
         power,
         timestamp,
         clientIP,
@@ -154,7 +153,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Validate input parameters
-    if (typeof angle !== "number" || typeof power !== "number" || typeof anglePhi !== "number") {  // TODO:
+    if (typeof angle !== "number" || typeof power !== "number" || typeof anglePhi !== "number") {
       EVENT_TRACK(
         "play_failed",
         {
@@ -178,7 +177,8 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    if (angle < -Math.PI / 2 || angle > Math.PI / 2 || power < 0 || power > 1 || anglePhi < -Math.PI / 2 || anglePhi > Math.PI / 2) { // TODO:
+    if (angle < -Math.PI / 2 || angle > Math.PI / 2 || power < 0 || power > 1 || anglePhi < -Math.PI / 2 || 
+        anglePhi > Math.PI / 2) {
       EVENT_TRACK(
         "play_failed",
         {
@@ -206,7 +206,7 @@ export async function POST(request: NextRequest) {
     const simulator = createSimulator() // Create with CourseManager config
     const result = simulator.simulate({
       angle,
-      anglePhi,  // TODO:
+      anglePhi,
       power,
       seed: session.seed,
     })

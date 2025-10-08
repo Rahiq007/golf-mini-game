@@ -119,7 +119,6 @@ export default function PlayGolfPage() {
   }
 
   const handleShoot = async (angle: number, anglePhi: number, power: number) => {
-    console.log("Running in handleShoot: angle = " + angle + ", anglePhi = " + anglePhi) // FIXME:
     if (!sessionId) {
       setError("No active session")
       return

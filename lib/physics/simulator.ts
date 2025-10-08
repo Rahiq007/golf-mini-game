@@ -96,24 +96,21 @@ export class GolfPhysicsSimulator {
 
     // Calculate initial velocity from angle and power with realistic scaling
     const initialSpeed = input.power * this.config.VMAX
-    // const initialVelocity: Vector2D = { // TODO:
-    //   x: Math.cos(input.angle) * initialSpeed,
-    //   y: Math.sin(input.angle) * initialSpeed,
-    // }
-    // FIXME: Code below doesn't work...? Is it because input.anglePhi doesn't work?
-    // FIXME: Need to update z value.
+
     const initialVelocity: Vector3D = {
-      x: Math.cos(input.angle) * initialSpeed * Math.cos(input.anglePhi) | Math.cos(input.angle) * initialSpeed, // TODO: If anglePhi doesn't work, then will default.
+      x: Math.cos(input.angle) * initialSpeed * Math.cos(input.anglePhi),    // TODO: Updated to include anglePhi.
       y: Math.sin(input.angle) * initialSpeed,
-      z: Math.cos(input.angle) * initialSpeed * Math.sin(input.anglePhi) | 0    // TODO:
+      z: Math.cos(input.angle) * initialSpeed * Math.sin(input.anglePhi)    // TODO: Updated to include anglePhi in z coordinate.
     }
 
     // Generate deterministic wind effect
     const windAngle = this.rng.range(0, 2 * Math.PI)
+    const windAnglePhi = this.rng.range(0, 2 * Math.PI)
     const windMagnitude = this.rng.range(0, this.config.windMaxMagnitude)
-    const windEffect: Vector2D = {
-      x: Math.cos(windAngle) * windMagnitude,
+    const windEffect: Vector3D = {  // TODO: Updated to include calculations with anglePhi.
+      x: Math.cos(windAngle) * windMagnitude * Math.cos(windAnglePhi),
       y: Math.sin(windAngle) * windMagnitude,
+      z: Math.cos(windAngle) * windMagnitude * Math.sin(windAnglePhi),  
     }
 
     const trajectory: BallState[] = []
@@ -140,7 +137,7 @@ export class GolfPhysicsSimulator {
       // Reset acceleration
       currentState.acceleration.x = 0
       currentState.acceleration.y = 0
-      currentState.acceleration.z = 0
+      currentState.acceleration.z = 0   // TODO: Added z attribute to currentState.acceleration.
 
       // Apply gravity (only when airborne)
       if (currentState.position.y > 0 || currentState.velocity.y > 0) {
@@ -155,6 +152,7 @@ export class GolfPhysicsSimulator {
       const windMultiplier = currentState.isRolling ? 0.1 : 1.0
       currentState.acceleration.x += windEffect.x * windMultiplier * 0.1
       currentState.acceleration.y += windEffect.y * windMultiplier * 0.1
+      currentState.acceleration.z += windEffect.z * windMultiplier * 0.1
 
       // Apply air resistance
       const speed = Math.sqrt(currentState.velocity.x ** 2 + currentState.velocity.y ** 2)
@@ -163,6 +161,7 @@ export class GolfPhysicsSimulator {
         const resistanceRatio = airResistanceForce / speed
         currentState.acceleration.x -= currentState.velocity.x * resistanceRatio
         currentState.acceleration.y -= currentState.velocity.y * resistanceRatio  // FIXME: Add currentState.acceleration.z
+        currentState.acceleration.z -= currentState.velocity.z * resistanceRatio
       }
 
       // Apply rolling resistance when on ground
@@ -187,14 +186,10 @@ export class GolfPhysicsSimulator {
       currentState.velocity.y += currentState.acceleration.y * this.config.timestep
       currentState.velocity.z += currentState.acceleration.z * this.config.timestep // TODO:
 
-      // console.log("currentState velocity: " + currentState.velocity.x + ", " + currentState.velocity.y + ", " + currentState.velocity.z)
-
       // Update position
       currentState.position.x += currentState.velocity.x * this.config.timestep
       currentState.position.y += currentState.velocity.y * this.config.timestep
       currentState.position.z += currentState.velocity.z * this.config.timestep   // TODO:
-
-      // console.log("currentState position: " + currentState.position.x + ", " + currentState.position.y + ", " + currentState.position.z)
 
       // Handle ground collision
       if (currentState.position.y < 0) {
@@ -226,15 +221,16 @@ export class GolfPhysicsSimulator {
       trajectory.push(this.cloneState(currentState))
 
       // Check if ball stopped
-      const currentSpeed = Math.sqrt(currentState.velocity.x ** 2 + currentState.velocity.y ** 2 + currentState.velocity.z ** 2)
+      const currentSpeed = Math.sqrt(currentState.velocity.x ** 2 + currentState.velocity.y ** 2 + currentState.velocity.z ** 2) // TODO:
       if (currentSpeed < this.config.stopSpeedThreshold && currentState.isRolling) {
         stoppedReason = "friction"
         break
       }
 
       // Check boundaries (simple course bounds)
-      if (Math.abs(currentState.position.y) > 20 || currentState.position.x < -5 || currentState.position.x > 100 ||
-          Math.abs(currentState.position.z) > 15) {   // z position checked based on GameCanvas.tsx value for meshnets. 
+      // TODO: Updated boundary check for x and z positions based on GameCanvas x and z positions of boundaries.
+      if (Math.abs(currentState.position.y) > 20 || currentState.position.x < -19.5 || currentState.position.x > 64.5 ||  
+          Math.abs(currentState.position.z) > 14.5) {   // z position checked based on GameCanvas.tsx value for meshnets. 
         stoppedReason = "boundary"
         break
       }
@@ -243,7 +239,7 @@ export class GolfPhysicsSimulator {
       const distanceToHole = Math.sqrt(
         (currentState.position.x - this.config.holePosition.x) ** 2 +
           (currentState.position.y - this.config.holePosition.y) ** 2 + 
-          (currentState.position.z - this.config.holePosition.z) ** 2,  // TODO:
+          (currentState.position.z - this.config.holePosition.z) ** 2  // TODO:
       )
 
       // WIN DETECTION: Ball must be inside the hole to win
@@ -261,6 +257,11 @@ export class GolfPhysicsSimulator {
           speed: currentSpeed.toFixed(3),
           message: 'WINNER - Ball entered hole!'
         })
+
+        // If ball enters the hole, provide a buffer to allow for GameCanvas to animate the ball falling into the whole.
+        for (let i: number = 0; i < 100; ++i) {
+          trajectory.push(this.cloneState(currentState))
+        }
         break
       }
       
