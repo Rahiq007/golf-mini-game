@@ -1,6 +1,7 @@
 import type {
   PhysicsConfig,
   Vector2D,
+  Vector3D, // TODO:
   BallState,
   SimulationInput,
   SimulationResult,
@@ -12,7 +13,7 @@ import { SeededRNG } from "./rng"
 export const DEFAULT_PHYSICS_CONFIG: PhysicsConfig = {
   VMAX: 30, // Maximum initial velocity (m/s) - realistic golf drive
   friction: 0.015, // Friction coefficient for grass
-  holePosition: { x: 45, y: 0 }, // Hole at 45 meters (realistic par-3 distance)
+  holePosition: { x: 45, y: 0, z: 0 }, // Hole at 45 meters (realistic par-3 distance)  // TODO:
   holeRadius: 0.054, // Standard golf hole radius (4.25 inches)
   tolerance: 0.02, // 2cm tolerance for "close enough"
   windMaxMagnitude: 3, // Max 3 m/s wind (light breeze)
@@ -43,6 +44,10 @@ export class GolfPhysicsSimulator {
     if (input.angle < -Math.PI / 2 || input.angle > Math.PI / 2) {
       errors.push("Angle must be between -90 and 90 degrees")
     }
+    // TODO: - Added.
+    if (input.anglePhi < -Math.PI / 2 || input.anglePhi > Math.PI / 2) {
+      errors.push("Angle_phi must be between -90 and 90 degrees")
+    }
 
     if (input.power < 0 || input.power > 1) {
       errors.push("Power must be between 0 and 1")
@@ -69,6 +74,8 @@ export class GolfPhysicsSimulator {
 
   simulate(input: SimulationInput): SimulationResult {
     const validation = this.validateInput(input)
+    console.log("Inside simulate within simulator.ts: input = " + input) // FIXME:
+
     if (!validation.isValid) {
       throw new Error(`Invalid input: ${validation.errors.join(", ")}`)
     }
@@ -82,23 +89,28 @@ export class GolfPhysicsSimulator {
       tolerance: this.config.tolerance,
       totalWinRadius: this.config.holeRadius + this.config.tolerance,
       angle: input.angle * (180 / Math.PI), // Convert to degrees for readability
+      anglePhi: input.anglePhi * (180 / Math.PI),   // TODO:
       power: input.power,
       seed: input.seed
     })
 
     // Calculate initial velocity from angle and power with realistic scaling
     const initialSpeed = input.power * this.config.VMAX
-    const initialVelocity: Vector2D = {
-      x: Math.cos(input.angle) * initialSpeed,
+
+    const initialVelocity: Vector3D = {
+      x: Math.cos(input.angle) * initialSpeed * Math.cos(input.anglePhi),    // TODO: Updated to include anglePhi.
       y: Math.sin(input.angle) * initialSpeed,
+      z: Math.cos(input.angle) * initialSpeed * Math.sin(input.anglePhi)    // TODO: Updated to include anglePhi in z coordinate.
     }
 
     // Generate deterministic wind effect
     const windAngle = this.rng.range(0, 2 * Math.PI)
+    const windAnglePhi = this.rng.range(0, 2 * Math.PI)
     const windMagnitude = this.rng.range(0, this.config.windMaxMagnitude)
-    const windEffect: Vector2D = {
-      x: Math.cos(windAngle) * windMagnitude,
+    const windEffect: Vector3D = {  // TODO: Updated to include calculations with anglePhi.
+      x: Math.cos(windAngle) * windMagnitude * Math.cos(windAnglePhi),
       y: Math.sin(windAngle) * windMagnitude,
+      z: Math.cos(windAngle) * windMagnitude * Math.sin(windAnglePhi),  
     }
 
     const trajectory: BallState[] = []
@@ -107,9 +119,9 @@ export class GolfPhysicsSimulator {
     let stoppedReason: "hole" | "friction" | "timeout" | "boundary" = "timeout"
 
     const currentState: BallState = {
-      position: { x: 0, y: 0 },
+      position: { x: 0, y: 0, z: 0 }, // TODO:
       velocity: { ...initialVelocity },
-      acceleration: { x: 0, y: 0 },
+      acceleration: { x: 0, y: 0, z: 0 }, // TODO:
       spin: this.rng.range(50, 200), // Initial backspin
       time: 0,
       isRolling: false,
@@ -125,6 +137,7 @@ export class GolfPhysicsSimulator {
       // Reset acceleration
       currentState.acceleration.x = 0
       currentState.acceleration.y = 0
+      currentState.acceleration.z = 0   // TODO: Added z attribute to currentState.acceleration.
 
       // Apply gravity (only when airborne)
       if (currentState.position.y > 0 || currentState.velocity.y > 0) {
@@ -139,6 +152,7 @@ export class GolfPhysicsSimulator {
       const windMultiplier = currentState.isRolling ? 0.1 : 1.0
       currentState.acceleration.x += windEffect.x * windMultiplier * 0.1
       currentState.acceleration.y += windEffect.y * windMultiplier * 0.1
+      currentState.acceleration.z += windEffect.z * windMultiplier * 0.1
 
       // Apply air resistance
       const speed = Math.sqrt(currentState.velocity.x ** 2 + currentState.velocity.y ** 2)
@@ -146,14 +160,15 @@ export class GolfPhysicsSimulator {
         const airResistanceForce = this.config.airResistance * speed * speed
         const resistanceRatio = airResistanceForce / speed
         currentState.acceleration.x -= currentState.velocity.x * resistanceRatio
-        currentState.acceleration.y -= currentState.velocity.y * resistanceRatio
+        currentState.acceleration.y -= currentState.velocity.y * resistanceRatio  // FIXME: Add currentState.acceleration.z
+        currentState.acceleration.z -= currentState.velocity.z * resistanceRatio
       }
 
       // Apply rolling resistance when on ground
       if (currentState.isRolling && speed > 0) {
         const rollingForce = this.config.rollResistance * this.config.gravity
         const rollingRatio = Math.min(rollingForce / speed, 1)
-        currentState.acceleration.x -= currentState.velocity.x * rollingRatio
+        currentState.acceleration.x -= currentState.velocity.x * rollingRatio   // FIXME: Add currentState.acceleration for z
       }
 
       // Apply friction when rolling
@@ -169,10 +184,12 @@ export class GolfPhysicsSimulator {
       // Update velocity with acceleration
       currentState.velocity.x += currentState.acceleration.x * this.config.timestep
       currentState.velocity.y += currentState.acceleration.y * this.config.timestep
+      currentState.velocity.z += currentState.acceleration.z * this.config.timestep // TODO:
 
       // Update position
       currentState.position.x += currentState.velocity.x * this.config.timestep
       currentState.position.y += currentState.velocity.y * this.config.timestep
+      currentState.position.z += currentState.velocity.z * this.config.timestep   // TODO:
 
       // Handle ground collision
       if (currentState.position.y < 0) {
@@ -191,6 +208,9 @@ export class GolfPhysicsSimulator {
       currentState.position.y = Math.round(currentState.position.y * 10000) / 10000
       currentState.velocity.x = Math.round(currentState.velocity.x * 10000) / 10000
       currentState.velocity.y = Math.round(currentState.velocity.y * 10000) / 10000
+      currentState.position.z = Math.round(currentState.position.z * 10000) / 10000
+      currentState.velocity.z = Math.round(currentState.velocity.z * 10000) / 10000
+
 
       // Track maximum height and distance
       maxHeight = Math.max(maxHeight, currentState.position.y)
@@ -201,14 +221,16 @@ export class GolfPhysicsSimulator {
       trajectory.push(this.cloneState(currentState))
 
       // Check if ball stopped
-      const currentSpeed = Math.sqrt(currentState.velocity.x ** 2 + currentState.velocity.y ** 2)
+      const currentSpeed = Math.sqrt(currentState.velocity.x ** 2 + currentState.velocity.y ** 2 + currentState.velocity.z ** 2) // TODO:
       if (currentSpeed < this.config.stopSpeedThreshold && currentState.isRolling) {
         stoppedReason = "friction"
         break
       }
 
       // Check boundaries (simple course bounds)
-      if (Math.abs(currentState.position.y) > 20 || currentState.position.x < -5 || currentState.position.x > 100) {
+      // TODO: Updated boundary check for x and z positions based on GameCanvas x and z positions of boundaries.
+      if (Math.abs(currentState.position.y) > 20 || currentState.position.x < -19.5 || currentState.position.x > 64.5 ||  
+          Math.abs(currentState.position.z) > 14.5) {   // z position checked based on GameCanvas.tsx value for meshnets. 
         stoppedReason = "boundary"
         break
       }
@@ -216,7 +238,8 @@ export class GolfPhysicsSimulator {
       // CRITICAL: Hole detection - WIN if ball CENTER is INSIDE the hole ring
       const distanceToHole = Math.sqrt(
         (currentState.position.x - this.config.holePosition.x) ** 2 +
-          (currentState.position.y - this.config.holePosition.y) ** 2,
+          (currentState.position.y - this.config.holePosition.y) ** 2 + 
+          (currentState.position.z - this.config.holePosition.z) ** 2  // TODO:
       )
 
       // WIN DETECTION: Ball must be inside the hole to win
@@ -234,6 +257,11 @@ export class GolfPhysicsSimulator {
           speed: currentSpeed.toFixed(3),
           message: 'WINNER - Ball entered hole!'
         })
+
+        // If ball enters the hole, provide a buffer to allow for GameCanvas to animate the ball falling into the whole.
+        for (let i: number = 0; i < 100; ++i) {
+          trajectory.push(this.cloneState(currentState))
+        }
         break
       }
       
@@ -263,7 +291,7 @@ export class GolfPhysicsSimulator {
           })
         }
       }
-    }
+    } // End of timestep simulation.
 
     // Final win condition check - based ONLY on if the ball entered the hole
     const outcome = stoppedReason === 'hole' ? 'win' : 'lose'
@@ -293,7 +321,7 @@ export class GolfPhysicsSimulator {
 
   // Get debug information about the simulation
   getDebugInfo(result: SimulationResult): DebugInfo {
-    const speeds = result.trajectory.map((state) => Math.sqrt(state.velocity.x ** 2 + state.velocity.y ** 2))
+    const speeds = result.trajectory.map((state) => Math.sqrt(state.velocity.x ** 2 + state.velocity.y ** 2 + state.velocity.x ** 2)) // TODO:
 
     const averageSpeed = speeds.reduce((sum, speed) => sum + speed, 0) / speeds.length
     const initialEnergy = speeds[0] ** 2

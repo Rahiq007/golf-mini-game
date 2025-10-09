@@ -124,7 +124,7 @@ export default function PlayGolfPage() {
     }
   }
 
-  const handleShoot = async (angle: number, power: number) => {
+  const handleShoot = async (angle: number, anglePhi: number, power: number) => {
     if (!sessionId) {
       setError("No active session")
       return
@@ -138,6 +138,7 @@ export default function PlayGolfPage() {
       // Run local simulation for immediate visual feedback
       const localResult = simulator.simulate({
         angle,
+        anglePhi,  // TODO:
         power,
         seed: useGameStore.getState().sessionSeed || 0,
       })
@@ -182,6 +183,7 @@ export default function PlayGolfPage() {
           sessionId,
           input: {
             angle,
+            anglePhi, // TODO:
             power,
             timestamp: Date.now(),
           },

@@ -10,7 +10,7 @@ import TrajectoryPreview from "./TrajectoryPreview"
 import { PhysicsUtils } from "@/lib/physics/utils"
 
 interface GameControlsProps {
-  onShoot: (angle: number, power: number) => void
+  onShoot: (angle: number, anglePhi: number, power: number) => void
   onTrajectoryChange?: (points: Array<{x:number;y:number}>) => void
   disabled?: boolean
   className?: string
@@ -18,6 +18,7 @@ interface GameControlsProps {
 
 export default function GameControls({ onShoot, onTrajectoryChange, disabled = false, className = "" }: GameControlsProps) {
   const [angle, setAngle] = useState(8) // Degrees - lower default angle
+  const [anglePhi, setAnglePhi] = useState(45)  // Degrees - angling left/right.
   const [power, setPower] = useState(0.5) // 0-1 - reduced default power
   const [isDragging, setIsDragging] = useState(false)
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 })
@@ -115,8 +116,9 @@ export default function GameControls({ onShoot, onTrajectoryChange, disabled = f
   const handleShoot = useCallback(() => {
     if (disabled) return
     const angleRadians = (angle * Math.PI) / 180
-    onShoot(angleRadians, power)
-  }, [angle, power, onShoot, disabled])
+    const anglePhiRadians = (anglePhi * Math.PI) / 180
+    onShoot(angleRadians, anglePhiRadians, power)
+  }, [angle, anglePhi, power, onShoot, disabled])
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
@@ -192,12 +194,24 @@ export default function GameControls({ onShoot, onTrajectoryChange, disabled = f
         {/* Manual Controls */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
-            <label className="text-sm font-medium">Angle: {angle}°</label>
+            <label className="text-sm font-medium">Angle Upwards: {angle}°</label>
             <Slider
               value={[angle]}
               onValueChange={([value]) => setAngle(value)}
-              min={-45}
-              max={45}
+              min={0}
+              max={90}
+              step={1}
+              disabled={disabled}
+              className="w-full"
+            />
+          </div>
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Angle: {Math.abs(anglePhi)}° to the {anglePhi < 0 ? "left" : "right"}</label>
+            <Slider
+              value={[anglePhi]}
+              onValueChange={([value]) => setAnglePhi(value)}
+              min={-90}
+              max={90}
               step={1}
               disabled={disabled}
               className="w-full"

@@ -499,26 +499,25 @@ export default function GameCanvas({
     let previousVelocity = { x: 0, y: 0, z: 0 }
     let ballStoppedAtBoundaryFrame = -1 // Track when ball stops at boundary
     let ballInHole = false
-    const holePos = scene.metadata?.holePosition || { x: 45, z: 0 }
+    const holePos = scene.metadata?.holePosition || { x: 45, y: 0, z: 0 }
     const holeDiameter = scene.metadata?.actualHoleDiameter || 0.5
-    
+
     trajectory.forEach((state, index) => {
       let ballPos = new Vector3(
         state.position.x,
         Math.max(state.position.y + 0.1, 0.1),
-        state.position.y * 0.1
+        state.position.z
       )
-      
+
       // Check if ball is inside the hole to trigger drop animation
       const distToHole = Math.sqrt(
-        Math.pow(ballPos.x - holePos.x, 2) + 
+        Math.pow(ballPos.x - holePos.x, 2) + Math.pow(ballPos.y - holePos.y, 2) +
         Math.pow(ballPos.z - holePos.z, 2)
       )
       
       // For drop animation: Ball inside the visual hole boundary
       // holeDiameter is already 1.5x enlarged, so use a portion of it
-      const dropRadius = holeDiameter * 0.35 // Ball must be inside to animate drop
-      
+      const dropRadius = holeDiameter // Ball must be inside to animate drop
       // Trigger drop if ball is inside hole - speed check only for smooth animation
       // Fast balls will still drop, just more dramatically!
       if (distToHole < dropRadius && !ballInHole) {
@@ -526,28 +525,26 @@ export default function GameCanvas({
         ballInHole = true
         // Mark the frame where ball starts dropping
         scene.metadata = { ...scene.metadata, ballDropStartFrame: index, ballInHoleFrame: index, ballWillWin: true }
-        console.log('[ANIMATION] Ball IN HOLE - animating drop at frame', index, 'distance:', distToHole.toFixed(3), 'dropRadius:', dropRadius.toFixed(3))
       }
-      
       // If ball is in hole, animate smooth dropping
       if (ballInHole) {
         const dropStartFrame = scene.metadata?.ballDropStartFrame || index
         const framesDropping = index - dropStartFrame
-        
         // Smooth drop animation with proper physics
         const dropAcceleration = 0.02 // Gravity effect
         const maxDropSpeed = 0.5
         const targetY = -0.4 // Final depth in hole
-        
         // Smoothly center ball on hole over first few frames
         const centeringSpeed = 0.15
         if (framesDropping < 10) {
           const centeringFactor = Math.min(1, framesDropping * centeringSpeed)
           ballPos.x = ballPos.x + (holePos.x - ballPos.x) * centeringFactor
+          ballPos.y = ballPos.y + (holePos.y - ballPos.y) * centeringFactor // TODO: ADDED
           ballPos.z = ballPos.z + (holePos.z - ballPos.z) * centeringFactor
         } else {
           // Fully centered
           ballPos.x = holePos.x
+          ballPos.y = holePos.y // TODO: ADDED
           ballPos.z = holePos.z
         }
         

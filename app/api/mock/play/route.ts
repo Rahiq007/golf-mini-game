@@ -67,13 +67,14 @@ export async function POST(request: NextRequest) {
   try {
     const body: PlayRequest = await request.json()
     const { sessionId, input } = body
-    const { angle, power, timestamp } = input
+    const { angle, anglePhi, power, timestamp } = input
 
     EVENT_TRACK(
       "play_attempt",
       {
         sessionId,
         angle,
+        anglePhi,
         power,
         timestamp,
         clientIP,
@@ -152,12 +153,13 @@ export async function POST(request: NextRequest) {
     }
 
     // Validate input parameters
-    if (typeof angle !== "number" || typeof power !== "number") {
+    if (typeof angle !== "number" || typeof power !== "number" || typeof anglePhi !== "number") {
       EVENT_TRACK(
         "play_failed",
         {
           reason: "invalid_input",
           angle: typeof angle,
+          anglePhi: typeof anglePhi,
           power: typeof power,
         },
         sessionId,
@@ -175,12 +177,14 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    if (angle < -Math.PI / 2 || angle > Math.PI / 2 || power < 0 || power > 1) {
+    if (angle < -Math.PI / 2 || angle > Math.PI / 2 || power < 0 || power > 1 || anglePhi < -Math.PI / 2 || 
+        anglePhi > Math.PI / 2) {
       EVENT_TRACK(
         "play_failed",
         {
           reason: "input_out_of_range",
           angle,
+          anglePhi, 
           power,
         },
         sessionId,
@@ -202,6 +206,7 @@ export async function POST(request: NextRequest) {
     const simulator = createSimulator() // Create with CourseManager config
     const result = simulator.simulate({
       angle,
+      anglePhi,
       power,
       seed: session.seed,
     })
@@ -259,7 +264,7 @@ export async function POST(request: NextRequest) {
         sessionId,
         outcome: result.outcome,
         processingTime,
-        finalDistance: Math.sqrt((result.finalPosition.x - 45) ** 2 + (result.finalPosition.y - 0) ** 2),
+        finalDistance: Math.sqrt((result.finalPosition.x - 45) ** 2 + (result.finalPosition.y - 0) ** 2), // Why does this calc finalPosition.x - 45?
         totalTime: result.totalTime,
       },
       sessionId,

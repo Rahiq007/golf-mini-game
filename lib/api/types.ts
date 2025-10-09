@@ -25,6 +25,7 @@ export interface PlayRequest {
   sessionId: string
   input: {
     angle: number
+    anglePhi: number // TODO:
     power: number
     timestamp: number
   }
@@ -35,11 +36,11 @@ export interface PlayResponse {
   outcome: "win" | "lose"
   awardedCoupon?: AwardedCoupon
   simulation: {
-    finalPosition: { x: number; y: number }
+    finalPosition: { x: number; y: number; z: number }
     totalTime: number
     trajectoryLength: number
     maxHeight: number
-    windEffect: { x: number; y: number }
+    windEffect: { x: number; y: number; z: number }
     stoppedReason: string
   }
   debugInfo?: {
