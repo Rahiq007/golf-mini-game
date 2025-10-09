@@ -811,18 +811,21 @@ export default function GameCanvas({
       trajectoryMeshRef.current = null
     }
 
-    if (showTrajectoryPreview && trajectoryPreview.length > 1) {
-      // Create trajectory line
-      const points = trajectoryPreview.map((point) => new Vector3(point.x, Math.max(point.y, 0), point.y * 0.05))
+    if (!showTrajectoryPreview || !trajectoryPreview) return
+    const points = trajectoryPreview.map((point) => new Vector3(
+      point.x,
+      Math.max(point.y + 0.1, 0.1),
+      point.y * 0.05
+    ))
 
-      const trajectoryLine = MeshBuilder.CreateLines("trajectoryPreview", { points }, scene)
-      const trajectoryMaterial = new StandardMaterial("trajectoryMat", scene)
-      trajectoryMaterial.emissiveColor = new Color3(1, 1, 0) // Yellow preview line
-      trajectoryLine.color = new Color3(1, 1, 0)
-      trajectoryLine.alpha = 0.7
+    // Create trajectory line
+    const trajectoryLine = MeshBuilder.CreateLines('trajectoryPreview', { points: points }, scene)
+    const trajectoryMaterial = new StandardMaterial("trajectoryMat", scene)
+    trajectoryMaterial.emissiveColor = new Color3(1, 1, 0) // Yellow preview line
+    trajectoryLine.color = new Color3(1, 1, 0)
+    trajectoryLine.alpha = 0.7
 
-      trajectoryMeshRef.current = trajectoryLine
-    }
+    trajectoryMeshRef.current = trajectoryLine
   }, [showTrajectoryPreview, trajectoryPreview])
 
   if (error) {

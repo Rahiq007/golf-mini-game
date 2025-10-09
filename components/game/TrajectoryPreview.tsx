@@ -51,7 +51,7 @@ export default function TrajectoryPreview({ angle, power, maxVelocity = 30, clas
         <circle cx="225" cy="150" r="3" fill="rgba(0, 0, 0, 0.7)" />
 
         {/* Trajectory path */}
-        <path d={svgPath} fill="none" stroke="rgba(255, 255, 0, 0.8)" strokeWidth="2" strokeDasharray="5,5" />
+        <path d={svgPath} fill="none" stroke="rgba(0, 0, 0, 0.8)" strokeWidth="2" strokeDasharray="4,4" />
 
         {/* Start point */}
         <circle cx="0" cy="150" r="2" fill="rgba(255, 255, 255, 0.9)" />
