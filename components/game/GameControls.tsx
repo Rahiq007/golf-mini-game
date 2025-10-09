@@ -17,8 +17,8 @@ interface GameControlsProps {
 }
 
 export default function GameControls({ onShoot, onTrajectoryChange, disabled = false, className = "" }: GameControlsProps) {
-  const [angle, setAngle] = useState(8) // Degrees - lower default angle
-  const [anglePhi, setAnglePhi] = useState(45)  // Degrees - angling left/right.
+  const [angle, setAngle] = useState(30) // Degrees - lower default angle
+  const [anglePhi, setAnglePhi] = useState(0)  // Degrees - angling left/right.
   const [power, setPower] = useState(0.5) // 0-1 - reduced default power
   const [isDragging, setIsDragging] = useState(false)
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 })
@@ -62,9 +62,10 @@ export default function GameControls({ onShoot, onTrajectoryChange, disabled = f
     if(!onTrajectoryChange || power === 0) return
     const maxVelocity = 30
     const angleRadians = (angle * Math.PI) / 180
-    const points = PhysicsUtils.calculateTrajectoryPreview(angleRadians, power, maxVelocity, 9.81, 30)
+    const anglePhiRadians = (anglePhi * Math.PI) / 180
+    const points = PhysicsUtils.calculate3DTrajectoryPreview(angleRadians, anglePhiRadians, power, maxVelocity, 9.81)
     onTrajectoryChange(points)
-  }, [angle, power])
+  }, [angle, anglePhi, power])
 
   useEffect(() => {
     if (isDragging) {

@@ -41,9 +41,9 @@ export default function PlayGolfPage() {
   } = useGameStore()
 
   const [simulator] = useState(() => createSimulator())
-  const [trajectoryPreview, setTrajectoryPreview] = useState<Array<{ x: number; y: number }>>([])
+  const [trajectoryPreview, setTrajectoryPreview] = useState<Array<{ x: number; y: number, z: number}>>([])
 
-  const handleTrajectoryChange = useCallback((preview: Array<{ x: number; y: number }>) => {
+  const handleTrajectoryChange = useCallback((preview: Array<{ x: number; y: number, z: number }>) => {
     setTrajectoryPreview(preview)
   }, [])
 

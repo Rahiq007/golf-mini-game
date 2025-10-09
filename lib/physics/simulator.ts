@@ -100,7 +100,7 @@ export class GolfPhysicsSimulator {
     const initialVelocity: Vector3D = {
       x: Math.cos(input.angle) * initialSpeed * Math.cos(input.anglePhi),    // TODO: Updated to include anglePhi.
       y: Math.sin(input.angle) * initialSpeed,
-      z: Math.cos(input.angle) * initialSpeed * Math.sin(input.anglePhi)    // TODO: Updated to include anglePhi in z coordinate.
+      z: Math.cos(input.angle) * initialSpeed * Math.sin(input.anglePhi) * (-1)   // TODO: Updated to include anglePhi in z coordinate.
     }
 
     // Generate deterministic wind effect
@@ -155,7 +155,7 @@ export class GolfPhysicsSimulator {
       currentState.acceleration.z += windEffect.z * windMultiplier * 0.1
 
       // Apply air resistance
-      const speed = Math.sqrt(currentState.velocity.x ** 2 + currentState.velocity.y ** 2)
+      const speed = Math.sqrt(currentState.velocity.x ** 2 + currentState.velocity.y ** 2 + currentState.velocity.z ** 2)
       if (speed > 0) {
         const airResistanceForce = this.config.airResistance * speed * speed
         const resistanceRatio = airResistanceForce / speed

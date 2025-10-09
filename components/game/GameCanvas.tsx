@@ -29,7 +29,7 @@ interface GameCanvasProps {
   isAnimating?: boolean
   onAnimationComplete?: () => void
   showTrajectoryPreview?: boolean
-  trajectoryPreview?: Array<{ x: number; y: number }>
+  trajectoryPreview?: Array<{ x: number; y: number, z: number }>
   className?: string
 }
 
@@ -812,7 +812,7 @@ export default function GameCanvas({
     const points = trajectoryPreview.map((point) => new Vector3(
       point.x,
       Math.max(point.y + 0.1, 0.1),
-      point.y * 0.05
+      point.z
     ))
 
     // Create trajectory line
