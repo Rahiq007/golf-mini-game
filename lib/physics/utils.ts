@@ -1,5 +1,4 @@
-import type { SimulationResult, BallState, Vector2D, Vector3D } from "./types"
-import { DEFAULT_PHYSICS_CONFIG } from "./simulator"
+import type { SimulationResult, BallState, Vector2D, Vector3D, PhysicsConfig } from "./types"
 import { SeededRNG } from "./rng"
 
 export class PhysicsUtils {
@@ -39,31 +38,28 @@ export class PhysicsUtils {
     angle: number,
     anglePhi: number,
     power: number,
-    maxVelocity = DEFAULT_PHYSICS_CONFIG.VMAX,
-    gravity = 9.81,
-    airResistance = 0.001,
-    timestep = 1 / 120,
-    maxTime = 15,
+    config: PhysicsConfig,
+    seed: number
   ): Array<{ x: number; y: number; z: number }> {
     // Calculate initial velocity
-    const initialSpeed = power * maxVelocity
+    const initialSpeed = power * config.VMAX
 
     // Initial velocity components
-    const velocity = {
+    const velocity: Vector3D = {
       x: Math.cos(angle) * initialSpeed * Math.cos(anglePhi),
       y: Math.sin(angle) * initialSpeed,
-      z: Math.cos(angle) * initialSpeed * Math.sin(anglePhi) * (-1),
+      z: Math.cos(angle) * initialSpeed * Math.sin(anglePhi) * (-1)
     }
 
     // Generate deterministic wind effect
-    const rng = new SeededRNG(0)
+    const rng = new SeededRNG(seed)
     const windAngle = rng.range(0, 2 * Math.PI)
     const windAnglePhi = rng.range(0, 2 * Math.PI)
-    const windMagnitude = rng.range(0, DEFAULT_PHYSICS_CONFIG.windMaxMagnitude)
+    const windMagnitude = rng.range(0, config.windMaxMagnitude)
     const windEffect: Vector3D = {  // TODO: Updated to include calculations with anglePhi.
       x: Math.cos(windAngle) * windMagnitude * Math.cos(windAnglePhi),
       y: Math.sin(windAngle) * windMagnitude,
-      z: Math.cos(windAngle) * windMagnitude * Math.sin(windAnglePhi),  
+      z: Math.cos(windAngle) * windMagnitude * Math.sin(windAnglePhi) * (-1),  
     }
 
     const position = {
@@ -77,8 +73,8 @@ export class PhysicsUtils {
 
     points.push({ ...position })
 
-    while (time < maxTime && position.y >= 0) { // Stop trajectory simulation after touching the ground
-      time += timestep
+    while (time < config.maxSimTime && position.y >= 0) { // Stop trajectory simulation after touching the ground
+      time += config.timestep
 
       // Reset acceleration
       const acceleration = {
@@ -88,7 +84,7 @@ export class PhysicsUtils {
       }
 
       // Apply gravity (only when airborne)
-      if (position.y > 0 || velocity.y > 0) acceleration.y -= gravity
+      if (position.y > 0 || velocity.y > 0) acceleration.y -= config.gravity
       else position.y = 0
 
       // Apply wind force
@@ -100,7 +96,7 @@ export class PhysicsUtils {
       // Apply air resistance
       const speed = Math.sqrt(velocity.x ** 2 + velocity.y ** 2 + velocity.z ** 2)
       if (speed > 0) {
-        const airResistanceForce = airResistance * speed * speed
+        const airResistanceForce = config.airResistance * speed * speed
         const resistanceRatio = airResistanceForce / speed
         acceleration.x -= velocity.x * resistanceRatio
         acceleration.y -= velocity.y * resistanceRatio
@@ -108,14 +104,14 @@ export class PhysicsUtils {
       }
 
       // Update velocity with acceleration
-      velocity.x += acceleration.x * timestep
-      velocity.y += acceleration.y * timestep
-      velocity.z += acceleration.z * timestep
+      velocity.x += acceleration.x * config.timestep
+      velocity.y += acceleration.y * config.timestep
+      velocity.z += acceleration.z * config.timestep
 
       // Update position
-      position.x += velocity.x * timestep
-      position.y += velocity.y * timestep
-      position.z += velocity.z * timestep
+      position.x += velocity.x * config.timestep
+      position.y += velocity.y * config.timestep
+      position.z += velocity.z * config.timestep
 
       // Round values for cross-platform determinism (match simulator)
       position.x = Math.round(position.x * 10000) / 10000

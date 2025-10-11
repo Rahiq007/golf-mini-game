@@ -80,8 +80,7 @@ export class GolfPhysicsSimulator {
       throw new Error(`Invalid input: ${validation.errors.join(", ")}`)
     }
 
-    this.rng.reset(input.seed)
-
+    
     // Debug: Log current physics configuration
     console.log('[PHYSICS] Starting simulation with config:', {
       holePosition: this.config.holePosition,
@@ -93,10 +92,10 @@ export class GolfPhysicsSimulator {
       power: input.power,
       seed: input.seed
     })
-
+    
     // Calculate initial velocity from angle and power with realistic scaling
     const initialSpeed = input.power * this.config.VMAX
-
+    
     const initialVelocity: Vector3D = {
       x: Math.cos(input.angle) * initialSpeed * Math.cos(input.anglePhi),    // TODO: Updated to include anglePhi.
       y: Math.sin(input.angle) * initialSpeed,
@@ -104,13 +103,14 @@ export class GolfPhysicsSimulator {
     }
 
     // Generate deterministic wind effect
+    this.rng.reset(input.seed)
     const windAngle = this.rng.range(0, 2 * Math.PI)
     const windAnglePhi = this.rng.range(0, 2 * Math.PI)
     const windMagnitude = this.rng.range(0, this.config.windMaxMagnitude)
     const windEffect: Vector3D = {  // TODO: Updated to include calculations with anglePhi.
       x: Math.cos(windAngle) * windMagnitude * Math.cos(windAnglePhi),
       y: Math.sin(windAngle) * windMagnitude,
-      z: Math.cos(windAngle) * windMagnitude * Math.sin(windAnglePhi),  
+      z: Math.cos(windAngle) * windMagnitude * Math.sin(windAnglePhi) * (-1),  
     }
 
     const trajectory: BallState[] = []

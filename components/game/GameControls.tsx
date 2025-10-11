@@ -8,15 +8,17 @@ import { Card } from "@/components/ui/card"
 import { Slider } from "@/components/ui/slider"
 import TrajectoryPreview from "./TrajectoryPreview"
 import { PhysicsUtils } from "@/lib/physics/utils"
+import { PhysicsConfig } from "@/lib/physics/types"
 
 interface GameControlsProps {
   onShoot: (angle: number, anglePhi: number, power: number) => void
-  onTrajectoryChange?: (points: Array<{x:number;y:number}>) => void
+  onTrajectoryChange?: (points: Array<{x: number; y: number, z: number}>) => void
   disabled?: boolean
   className?: string
+  courseConfig?: {config: PhysicsConfig, seed: number}
 }
 
-export default function GameControls({ onShoot, onTrajectoryChange, disabled = false, className = "" }: GameControlsProps) {
+export default function GameControls({ onShoot, onTrajectoryChange, disabled = false, className = "", courseConfig }: GameControlsProps) {
   const [angle, setAngle] = useState(30) // Degrees - lower default angle
   const [anglePhi, setAnglePhi] = useState(0)  // Degrees - angling left/right.
   const [power, setPower] = useState(0.5) // 0-1 - reduced default power
@@ -59,11 +61,10 @@ export default function GameControls({ onShoot, onTrajectoryChange, disabled = f
   }, [])
 
   useEffect(() => {
-    if(!onTrajectoryChange || power === 0) return
-    const maxVelocity = 30
+    if(!onTrajectoryChange || power === 0 || !courseConfig) return
     const angleRadians = (angle * Math.PI) / 180
     const anglePhiRadians = (anglePhi * Math.PI) / 180
-    const points = PhysicsUtils.calculate3DTrajectoryPreview(angleRadians, anglePhiRadians, power, maxVelocity, 9.81)
+    const points = PhysicsUtils.calculate3DTrajectoryPreview(angleRadians, anglePhiRadians, power, courseConfig.config, courseConfig.seed)
     onTrajectoryChange(points)
   }, [angle, anglePhi, power])
 

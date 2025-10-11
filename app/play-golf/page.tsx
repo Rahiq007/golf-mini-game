@@ -325,7 +325,12 @@ export default function PlayGolfPage() {
 
             {/* Game Controls */}
             <div className="space-y-4">
-              <GameControls onShoot={handleShoot} onTrajectoryChange={handleTrajectoryChange} disabled={gameState === "animating" || isLoading} />
+              <GameControls
+                onShoot={handleShoot}
+                onTrajectoryChange={handleTrajectoryChange}
+                disabled={gameState === "animating" || isLoading}
+                courseConfig={{config: simulator.getConfig(), seed: useGameStore.getState().sessionSeed || 0}}
+              />
 
               {/* Session Info */}
               <Card className="p-4">
