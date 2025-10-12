@@ -3,10 +3,10 @@ import { PhysicsUtils } from "./utils"
 import { CourseManager } from "../game/courseManager"
 import type { PhysicsConfig, SimulationInput } from "./types"
 
-export function createSimulator(config?: Partial<PhysicsConfig>) {
+export function createSimulator(config?: Partial<PhysicsConfig>, courseNum?: number) {
   // If no config provided, use the CourseManager's harder physics
   if (!config) {
-    const courseManager = new CourseManager()
+    const courseManager = new CourseManager(courseNum)
     const harderConfig = courseManager.getPhysicsConfig()
     return new GolfPhysicsSimulator(harderConfig)
   }

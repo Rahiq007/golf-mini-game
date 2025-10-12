@@ -67,8 +67,7 @@ export async function POST(request: NextRequest) {
   try {
     const body: PlayRequest = await request.json()
     const { sessionId, input } = body
-    const { angle, anglePhi, power, timestamp } = input
-
+    const { angle, anglePhi, power, timestamp, courseID } = input
     EVENT_TRACK(
       "play_attempt",
       {
@@ -77,6 +76,7 @@ export async function POST(request: NextRequest) {
         anglePhi,
         power,
         timestamp,
+        courseID,
         clientIP,
       },
       sessionId,
@@ -203,7 +203,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Run deterministic simulation using CourseManager configuration
-    const simulator = createSimulator() // Create with CourseManager config
+    // console.log('[API/MOCK/PLAY/ROUTE.TS] Calling createSimulator() with courseID: ', courseID)
+    const simulator = createSimulator(undefined, courseID) // Create with CourseManager config
     const result = simulator.simulate({
       angle,
       anglePhi,
