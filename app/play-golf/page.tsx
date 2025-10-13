@@ -39,7 +39,13 @@ export default function PlayGolfPage() {
     resetGame,
   } = useGameStore()
 
-  const [simulator] = useState(() => createSimulator())
+  const [simulator, setSimulator] = useState(() => createSimulator())
+  const [courseID, setCourseID] = useState(() => {
+    const simulatorConfig = simulator.getConfig()
+    console.log("[Play-Golf Page]: courseID: ", simulatorConfig.course_index)
+    return simulatorConfig.course_index
+  })
+
 
   // Load coupons on mount
   useEffect(() => {
@@ -75,6 +81,7 @@ export default function PlayGolfPage() {
     }
   }, [setShowTutorial])
 
+
   const handleTutorialClose = () => {
     setShowTutorial(false)
     localStorage.setItem("golf-game-tutorial-seen", "true")
@@ -106,6 +113,18 @@ export default function PlayGolfPage() {
 
       if (data.success && data.data) {
         setSession(data.data.sessionId, data.data.seed)
+        console.log("Setting simulator and courseID, prev courseID: ", courseID)
+
+        // Select new Course (with updated config) and store the course ID on
+        // new session generation.
+        const newSimulator = createSimulator()
+        setSimulator(createSimulator())
+        setSimulator(newSimulator)
+
+        const newCourseID = (newSimulator.getConfig()).course_index
+        setCourseID(newCourseID)
+
+        console.log("Updated values for courseID: ", newCourseID)
         setGameState("playing")
       } else {
         setError(data.error || "Failed to create game session")
@@ -118,7 +137,7 @@ export default function PlayGolfPage() {
     }
   }
 
-  const handleShoot = async (angle: number, power: number) => {
+  const handleShoot = async (angle: number, anglePhi: number, power: number) => {
     if (!sessionId) {
       setError("No active session")
       return
@@ -130,8 +149,10 @@ export default function PlayGolfPage() {
       setGameState("animating")
 
       // Run local simulation for immediate visual feedback
+      console.log("Running local simulation.")
       const localResult = simulator.simulate({
         angle,
+        anglePhi,
         power,
         seed: useGameStore.getState().sessionSeed || 0,
       })
@@ -176,8 +197,10 @@ export default function PlayGolfPage() {
           sessionId,
           input: {
             angle,
+            anglePhi, // TODO:
             power,
             timestamp: Date.now(),
+            courseID  // Added courseID to API to maintain consistency with simulators.
           },
         }),
       })
@@ -309,6 +332,7 @@ export default function PlayGolfPage() {
                 trajectory={gameState === "animating" ? trajectory : undefined}
                 isAnimating={gameState === "animating"}
                 onAnimationComplete={handleAnimationComplete}
+                courseID={courseID}
                 className="h-96 lg:h-[500px]"
               />
             </div>

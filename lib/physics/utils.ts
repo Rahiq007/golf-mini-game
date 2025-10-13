@@ -59,14 +59,18 @@ export class PhysicsUtils {
           position: {
             x: current.position.x + t * (next.position.x - current.position.x),
             y: current.position.y + t * (next.position.y - current.position.y),
+            z: current.position.z + t * (next.position.z - current.position.z)
           },
           velocity: {
             x: current.velocity.x + t * (next.velocity.x - current.velocity.x),
             y: current.velocity.y + t * (next.velocity.y - current.velocity.y),
+            z: current.velocity.z + t * (next.velocity.z - current.velocity.z),
+
           },
           acceleration: {
             x: current.acceleration.x + t * (next.acceleration.x - current.acceleration.x),
             y: current.acceleration.y + t * (next.acceleration.y - current.acceleration.y),
+            z: current.acceleration.z + t * (next.acceleration.z - current.acceleration.z),
           },
           spin: current.spin + t * (next.spin - current.spin),
           time,

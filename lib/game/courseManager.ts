@@ -55,7 +55,7 @@ export const GOLF_COURSES: CourseConfig[] = [
     name: 'Desert Dunes',
     difficulty: 'hard',
     holeDistance: 50,
-    holePosition: new Vector3(50, 0, 2), // Slightly off-center
+    holePosition: new Vector3(50, 0, 4), // Slightly off-center
     holeDiameter: 0.25, // Smaller hole - harder
     windStrength: 4, // More wind
     fairwayWidth: 4, // Narrower fairway
@@ -111,7 +111,7 @@ export const GOLF_COURSES: CourseConfig[] = [
     name: 'Mountain Peak',
     difficulty: 'medium',
     holeDistance: 42,
-    holePosition: new Vector3(42, 0.5, 1), // Elevated hole
+    holePosition: new Vector3(42, 0, 1),
     holeDiameter: 0.32,
     windStrength: 3,
     fairwayWidth: 4.5,
@@ -140,10 +140,20 @@ export class CourseManager {
   private currentCourse: CourseConfig
   private courseBuilt: boolean = false
 
-  constructor() {
-    // Select a random course
-    this.currentCourse = this.selectRandomCourse()
+  constructor(courseNum?: number) {
+    // Select a random course if an index isn't provided.
+    this.currentCourse = (courseNum !== undefined ? this.selectCourse(courseNum) : this.selectRandomCourse())
     console.log('[COURSE] Selected course:', this.currentCourse.name, 'Difficulty:', this.currentCourse.difficulty)
+  }
+
+  selectCourse(index: number): CourseConfig {
+    if (index >= 0 && index < GOLF_COURSES.length) {
+      console.log("[courseManager]: Manually selected course number: ", index)
+      return GOLF_COURSES[index]
+    }
+    // Invalid index -> Choose a random course instead.
+    console.log("[courseManager]: Invalid index of ", index, ", selecting random course.")
+    return this.selectRandomCourse()
   }
 
   selectRandomCourse(): CourseConfig {
@@ -155,25 +165,38 @@ export class CourseManager {
     return this.currentCourse
   }
   
+ getCurrentCourseIndex(): number {
+  for (let indexOfGolfCourseArray = 0; indexOfGolfCourseArray < GOLF_COURSES.length; ++indexOfGolfCourseArray) {
+    if (this.currentCourse.id == GOLF_COURSES[indexOfGolfCourseArray].id) {
+      return indexOfGolfCourseArray;
+    } 
+  }
+  return -1;
+ }
+
   getPhysicsConfig() {
     // Return the harder physics config with course-specific adjustments
     const multipliers = DIFFICULTY_MULTIPLIERS[this.currentCourse.difficulty]
-    
+    const currentCourseIndex = this.getCurrentCourseIndex()
+
     return {
       ...HARD_PHYSICS_CONFIG,
       // Apply difficulty multipliers
+      course_index: currentCourseIndex,
       friction: HARD_PHYSICS_CONFIG.friction * multipliers.friction,
       windMaxMagnitude: HARD_PHYSICS_CONFIG.windMaxMagnitude * multipliers.windMaxMagnitude,
       airResistance: HARD_PHYSICS_CONFIG.airResistance * multipliers.airResistance,
       rollResistance: HARD_PHYSICS_CONFIG.rollResistance * multipliers.rollResistance,
-      // Convert Vector3 to Vector2D for physics (x,z -> x,y)
+      
+      // Use Vector3 to perform Vector3D calculations.
       holePosition: { 
         x: this.currentCourse.holePosition.x, 
-        y: this.currentCourse.holePosition.z 
+        y: this.currentCourse.holePosition.y,
+        z: this.currentCourse.holePosition.z
       },
       // Use generous radius for hole detection - if ball is visually in the hole, it wins!
       // Make the physics hole radius slightly larger than the visual hole for better UX
-      holeRadius: Math.max(0.3, (this.currentCourse.holeDiameter / 2) * multipliers.holeRadius)
+      holeRadius: Math.max(0.5, (this.currentCourse.holeDiameter / 2) * multipliers.holeRadius)
     }
   }
 
