@@ -20,6 +20,7 @@ import {
   UniversalCamera,
   CubicEase,
   EasingFunction,
+  circleOfConfusionPixelShader,
 } from "@babylonjs/core"
 import type { BallState } from "@/lib/physics/types"
 import { CourseManager } from "@/lib/game/courseManager"
@@ -31,6 +32,7 @@ interface GameCanvasProps {
   showTrajectoryPreview?: boolean
   trajectoryPreview?: Array<{ x: number; y: number, z: number }>
   className?: string
+  courseID?: number
 }
 
 export default function GameCanvas({
@@ -40,6 +42,7 @@ export default function GameCanvas({
   showTrajectoryPreview = false,
   trajectoryPreview = [],
   className = "",
+  courseID = -1
 }: GameCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const engineRef = useRef<Engine | null>(null)
@@ -146,8 +149,9 @@ export default function GameCanvas({
         teePegMaterial.emissiveColor = new Color3(0.1, 0.1, 0.05)
         teePeg.material = teePegMaterial
 
-        // Initialize CourseManager and get current course
-        const courseManager = new CourseManager()
+        // Initialize CourseManager and get current course based on courseID value.
+        console.log('[GameCanvas]: Creating Course with courseID: ', courseID)
+        const courseManager = new CourseManager(courseID)
         courseManagerRef.current = courseManager
         const currentCourse = courseManager.getCurrentCourse()
         setCourseName(currentCourse.name)
@@ -177,7 +181,7 @@ export default function GameCanvas({
         puttingGreenInner.material = greenInnerMaterial
         
         // Create MORE VISIBLE hole with proper depth - make it bigger and more obvious
-        const holeDiameter = currentCourse.holeDiameter * 1.5 // Make hole 50% bigger for visibility
+        const holeDiameter = currentCourse.holeDiameter * 1.25 // Changed to keep holeDiameter the same to better represent when ball goes in.
         
         // Create visible hole depression in the green
         const holeDepression = MeshBuilder.CreateCylinder("holeDepression", { 
@@ -412,7 +416,7 @@ export default function GameCanvas({
         // Store nets and hole info in scene metadata for access in animation
         scene.metadata = { 
           nets,
-          actualHoleDiameter: currentCourse.holeDiameter * 1.5, // Store the enlarged hole size
+          actualHoleDiameter: currentCourse.holeDiameter, // Changed from increased by 1.5x, 
           holePosition: currentCourse.holePosition
         }
 
@@ -500,7 +504,8 @@ export default function GameCanvas({
     let ballStoppedAtBoundaryFrame = -1 // Track when ball stops at boundary
     let ballInHole = false
     const holePos = scene.metadata?.holePosition || { x: 45, y: 0, z: 0 }
-    const holeDiameter = scene.metadata?.actualHoleDiameter || 0.5
+    const default_tolerance = 0.02  // used to maintain similar calculations to simulator.ts
+    const holeDiameter = scene.metadata?.actualHoleDiameter + default_tolerance
 
     trajectory.forEach((state, index) => {
       let ballPos = new Vector3(
@@ -520,7 +525,7 @@ export default function GameCanvas({
       const dropRadius = holeDiameter // Ball must be inside to animate drop
       // Trigger drop if ball is inside hole - speed check only for smooth animation
       // Fast balls will still drop, just more dramatically!
-      if (distToHole < dropRadius && !ballInHole) {
+      if (distToHole <= dropRadius && !ballInHole) {
         // Ball is IN THE HOLE - animate dropping
         ballInHole = true
         // Mark the frame where ball starts dropping
@@ -636,7 +641,10 @@ export default function GameCanvas({
           }
         }
       }
-      
+      // Example console log to compare hole position of GameCanvas and Simulator.
+      // console.log('[CUSTOM CANVAS]: ballPos = ', ballPos.x, ballPos.y, ballPos.z, '\tdistToHole: ', distToHole, 
+      // '\tholeDiameter: ', holeDiameter, holePos.x, holePos.y, holePos.z)
+
       positionKeys.push({
         frame: index,
         value: ballPos

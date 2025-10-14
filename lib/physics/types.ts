@@ -1,4 +1,5 @@
 export interface PhysicsConfig {
+  course_index: number  // Index of the current course in the golf course array
   VMAX: number // Maximum initial velocity
   friction: number // Friction coefficient
   holePosition: { x: number; y: number; z: number } // Hole position on the course

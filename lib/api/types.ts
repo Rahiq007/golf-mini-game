@@ -28,6 +28,7 @@ export interface PlayRequest {
     anglePhi: number // TODO:
     power: number
     timestamp: number
+    courseID?: number    // included courseID for simulators run on page or in API call.
   }
 }
 

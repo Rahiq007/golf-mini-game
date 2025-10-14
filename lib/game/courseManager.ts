@@ -140,10 +140,20 @@ export class CourseManager {
   private currentCourse: CourseConfig
   private courseBuilt: boolean = false
 
-  constructor() {
-    // Select a random course
-    this.currentCourse = this.selectRandomCourse()
+  constructor(courseNum?: number) {
+    // Select a random course if an index isn't provided.
+    this.currentCourse = (courseNum !== undefined ? this.selectCourse(courseNum) : this.selectRandomCourse())
     console.log('[COURSE] Selected course:', this.currentCourse.name, 'Difficulty:', this.currentCourse.difficulty)
+  }
+
+  selectCourse(index: number): CourseConfig {
+    if (index >= 0 && index < GOLF_COURSES.length) {
+      console.log("[courseManager]: Manually selected course number: ", index)
+      return GOLF_COURSES[index]
+    }
+    // Invalid index -> Choose a random course instead.
+    console.log("[courseManager]: Invalid index of ", index, ", selecting random course.")
+    return this.selectRandomCourse()
   }
 
   selectRandomCourse(): CourseConfig {
@@ -155,13 +165,24 @@ export class CourseManager {
     return this.currentCourse
   }
   
+ getCurrentCourseIndex(): number {
+  for (let indexOfGolfCourseArray = 0; indexOfGolfCourseArray < GOLF_COURSES.length; ++indexOfGolfCourseArray) {
+    if (this.currentCourse.id == GOLF_COURSES[indexOfGolfCourseArray].id) {
+      return indexOfGolfCourseArray;
+    } 
+  }
+  return -1;
+ }
+
   getPhysicsConfig() {
     // Return the harder physics config with course-specific adjustments
     const multipliers = DIFFICULTY_MULTIPLIERS[this.currentCourse.difficulty]
-    
+    const currentCourseIndex = this.getCurrentCourseIndex()
+
     return {
       ...HARD_PHYSICS_CONFIG,
       // Apply difficulty multipliers
+      course_index: currentCourseIndex,
       friction: HARD_PHYSICS_CONFIG.friction * multipliers.friction,
       windMaxMagnitude: HARD_PHYSICS_CONFIG.windMaxMagnitude * multipliers.windMaxMagnitude,
       airResistance: HARD_PHYSICS_CONFIG.airResistance * multipliers.airResistance,
@@ -175,7 +196,7 @@ export class CourseManager {
       },
       // Use generous radius for hole detection - if ball is visually in the hole, it wins!
       // Make the physics hole radius slightly larger than the visual hole for better UX
-      holeRadius: Math.max(0.3, (this.currentCourse.holeDiameter / 2) * multipliers.holeRadius)
+      holeRadius: Math.max(0.5, (this.currentCourse.holeDiameter / 2) * multipliers.holeRadius)
     }
   }
 
