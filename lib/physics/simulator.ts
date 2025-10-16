@@ -260,11 +260,15 @@ export class GolfPhysicsSimulator {
           speed: currentSpeed.toFixed(3),
           message: 'WINNER - Ball entered hole!'
         })
-
         // If ball enters the hole, provide a buffer to allow for GameCanvas to animate the ball falling into the whole.
-        for (let i: number = 0; i < 100; ++i) {
-          trajectory.push(this.cloneState(currentState))
-        }
+        // for (let i: number = 0; i < 100; ++i) {
+        //   trajectory.push(this.cloneState(currentState))
+        // }
+
+        // Add a set of frames to the trajectory array for the gameCanvas to animate the ball falling into the hole.
+        // Frames are as if the ball continues rolling past the hole, but doesn't check for boundary/collision.
+        // Maintains the "ballInHOle" logic.
+        this.addExtraFrames(50, trajectory, windEffect)
         break
       }
       
@@ -353,4 +357,122 @@ export class GolfPhysicsSimulator {
   getConfig(): PhysicsConfig {
     return { ...this.config }
   }
+
+  updateAcceleration(state: BallState): void {
+    state.acceleration.x = 0
+    state.acceleration.y = 0
+    state.acceleration.z = 0
+  }
+
+  applyGravity(state: BallState): void {
+    if (state.position.y > 0 || state.velocity.y > 0) {
+      state.acceleration.y -= this.config.gravity
+      state.isRolling = false
+    } else {
+      state.isRolling = true
+      state.position.y = 0
+    }
+  }
+
+  applyWindForce(state: BallState, windEffectParam: Vector3D): void {
+    const windMultiplier = state.isRolling ? 0.1 : 1.0
+    state.acceleration.x += windEffectParam.x * windMultiplier * 0.1
+    state.acceleration.y += windEffectParam.y * windMultiplier * 0.1
+    state.acceleration.z += windEffectParam.z * windMultiplier * 0.1
+  }
+
+  applyResistances(state: BallState): void {
+
+    // Applies air resistance
+    const speed = Math.sqrt(state.velocity.x ** 2 + 
+                            state.velocity.y ** 2 + 
+                            state.velocity.z ** 2)
+    if (speed > 0) {
+      const airResistanceForce = this.config.airResistance * speed * speed
+      const resistanceRatio = airResistanceForce / speed
+      state.acceleration.x -= state.velocity.x * resistanceRatio
+      state.acceleration.y -= state.velocity.y * resistanceRatio
+      state.acceleration.z -= state.velocity.z * resistanceRatio
+    }
+
+    // Apply rolling resistance when on ground
+    if (state.isRolling && speed > 0) {
+      const rollingForce = this.config.rollResistance * this.config.gravity
+      const rollingRatio = Math.min(rollingForce / speed, 1)
+      state.acceleration.x -= state.velocity.x * rollingRatio
+      state.acceleration.z -= state.velocity.z * rollingRatio
+    }
+
+    // Apply friction when rolling
+    if (state.isRolling) {
+      const frictionForce = this.config.friction * this.config.gravity
+      if (speed > 0) {
+        const frictionRatio = Math.min((frictionForce * this.config.timestep) / speed, 1)
+        state.velocity.x *= 1 - frictionRatio
+        state.velocity.z *= 1 - frictionRatio
+      }
+    }
+  }
+  // Update the velocity for the given state using the acceleration
+  updateVelocity(state: BallState): void {
+    state.velocity.x += state.acceleration.x * this.config.timestep
+    state.velocity.y += state.acceleration.y * this.config.timestep
+    state.velocity.z += state.acceleration.z * this.config.timestep
+  }
+
+  // Update the position based on the velocity over a period of time.
+  updatePosition(state: BallState): void {
+    state.position.x += state.velocity.x * this.config.timestep
+    state.position.y += state.velocity.y * this.config.timestep
+    state.position.z += state.velocity.z * this.config.timestep
+  }
+  // Handle ground collision
+  handleGroundCollision(state: BallState): void {
+    if (state.position.y < 0) {
+      state.position.y = 0
+      state.velocity.y = Math.abs(state.velocity.y) * this.config.bounceRestitution
+      if (state.velocity.y < 0.5) {
+        state.velocity.y = 0 // Stop small bounces
+      }
+    }
+  }
+  updateSpinDecay(state: BallState): void {
+    state.spin *= 0.99
+  }
+
+  // Round values for cross-platform determinism
+  roundValues(state: BallState): void {
+    state.position.x = Math.round(state.position.x * 10000) / 10000
+    state.position.y = Math.round(state.position.y * 10000) / 10000
+    state.velocity.x = Math.round(state.velocity.x * 10000) / 10000
+    state.velocity.y = Math.round(state.velocity.y * 10000) / 10000
+    state.position.z = Math.round(state.position.z * 10000) / 10000
+    state.velocity.z = Math.round(state.velocity.z * 10000) / 10000
+  }
+
+  addExtraFrames(numOfFrames: number, trajectory_param: BallState[], 
+    windEffectParam: Vector3D): void {
+      console.log("[Simulator]: Adding Extra Frames.")
+      // Loop to add the extra frames to the trajectory.
+      for (let i: number = 0; i < numOfFrames; ++i) {
+        const state: BallState = trajectory_param[trajectory_param.length - 1]
+
+        // console.log(state.position)
+        state.time += this.config.timestep
+
+        // Update all of the attributes of the state with function calls.
+        this.updateAcceleration(state)
+        this.applyGravity(state)
+        this.applyWindForce(state, windEffectParam)
+        this.applyResistances(state)
+        this.updateVelocity(state)
+        this.updatePosition(state)
+        // Update spin decay
+        this.updateSpinDecay(state)
+        this.roundValues(state)
+
+        trajectory_param.push(this.cloneState(state))
+      }
+  }
 }
+

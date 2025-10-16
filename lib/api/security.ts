@@ -44,6 +44,9 @@ class SecurityManager {
     const now = Date.now()
 
     // Check replay protection
+    // console.log("Inside validatePlay:")
+    // console.log("now: ", now, "\ttimestamp: ", timestamp, "replayProtectionWindowMs", 
+    //             "abs(now - timestamp)", Math.abs(now - timestamp), this.config.replayProtectionWindowMs)
     if (Math.abs(now - timestamp) > this.config.replayProtectionWindowMs) {
       return { allowed: false, reason: "Timestamp outside acceptable window" }
     }

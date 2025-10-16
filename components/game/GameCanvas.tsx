@@ -516,7 +516,7 @@ export default function GameCanvas({
 
       // Check if ball is inside the hole to trigger drop animation
       const distToHole = Math.sqrt(
-        Math.pow(ballPos.x - holePos.x, 2) + Math.pow(ballPos.y - holePos.y, 2) +
+        Math.pow(ballPos.x - holePos.x, 2) + Math.pow((ballPos.y - 0.1) - holePos.y, 2) +
         Math.pow(ballPos.z - holePos.z, 2)
       )
       
@@ -751,9 +751,13 @@ export default function GameCanvas({
       for (let i = 0; i <= cameraStopFrame; i++) {
         const state = trajectory[i]
         if (!state) continue
-        
-        const ballX = state.position.x
-        const ballY = state.position.y
+
+        // If we're in the buffer frames, then keep the camera at the location of where the ball was at
+        // when it reached the hole.
+        const ballX = ((i > ballInHoleFrame) ? 
+          trajectory[ballInHoleFrame].position.x : state.position.x)
+        const ballY = ((i > ballInHoleFrame) ? 
+          trajectory[ballInHoleFrame].position.y : state.position.y)
         
         // Camera target (where it looks)
         cameraFollowKeys.push({
