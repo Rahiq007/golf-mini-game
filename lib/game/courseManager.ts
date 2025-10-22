@@ -26,7 +26,7 @@ export const GOLF_COURSES: CourseConfig[] = [
     difficulty: 'medium',
     holeDistance: 45,
     holePosition: new Vector3(45, 0, 0),
-    holeDiameter: 0.35, // Medium difficulty
+    holeDiameter: 0.45, // Medium difficulty
     windStrength: 2,
     fairwayWidth: 5,
     bunkers: [
@@ -56,7 +56,7 @@ export const GOLF_COURSES: CourseConfig[] = [
     difficulty: 'hard',
     holeDistance: 50,
     holePosition: new Vector3(50, 0, 4), // Slightly off-center
-    holeDiameter: 0.25, // Smaller hole - harder
+    holeDiameter: 0.35, // Smaller hole - harder
     windStrength: 4, // More wind
     fairwayWidth: 4, // Narrower fairway
     bunkers: [
@@ -85,7 +85,7 @@ export const GOLF_COURSES: CourseConfig[] = [
     difficulty: 'hard',
     holeDistance: 48,
     holePosition: new Vector3(48, 0, -3),
-    holeDiameter: 0.28,
+    holeDiameter: 0.35,
     windStrength: 5, // Heavy coastal wind
     fairwayWidth: 3.5, // Very narrow
     bunkers: [
@@ -112,7 +112,7 @@ export const GOLF_COURSES: CourseConfig[] = [
     difficulty: 'medium',
     holeDistance: 42,
     holePosition: new Vector3(42, 0, 1),
-    holeDiameter: 0.32,
+    holeDiameter: 0.45,
     windStrength: 3,
     fairwayWidth: 4.5,
     bunkers: [
@@ -196,7 +196,11 @@ export class CourseManager {
       },
       // Use generous radius for hole detection - if ball is visually in the hole, it wins!
       // Make the physics hole radius slightly larger than the visual hole for better UX
-      holeRadius: Math.max(0.5, (this.currentCourse.holeDiameter / 2) * multipliers.holeRadius)
+      // holeRadius: Math.max(0.3, (this.currentCourse.holeDiameter / 2) * multipliers.holeRadius)
+
+      // Not using generous radius to ensure that simulator and GameCanvas results match up
+      // as close as possible.
+      holeRadius: this.currentCourse.holeDiameter
     }
   }
 

@@ -205,7 +205,7 @@ export default function PlayGolfPage() {
           sessionId,
           input: {
             angle,
-            anglePhi, // TODO:
+            anglePhi,
             power,
             timestamp: Date.now(),
             courseID  // Added courseID to API to maintain consistency with simulators.

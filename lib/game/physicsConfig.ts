@@ -6,7 +6,7 @@ export const HARD_PHYSICS_CONFIG: PhysicsConfig = {
   friction: 0.025, // Increased from 0.015 - more friction
   holePosition: { x: 45, y: 0, z: 0 }, // Default, will be overridden by course
   holeRadius: 0.25, // Increased to match visual hole size
-  tolerance: 0.01, // Reduced from 0.02 - requires more precision
+  tolerance: 0.02, // Kept at 0.02 to ensure consistency between simulator and GameCanvas. Prev at 0.01.
   windMaxMagnitude: 5, // Increased from 3 - stronger wind effects
   maxSimTime: 15,
   stopSpeedThreshold: 0.05,
