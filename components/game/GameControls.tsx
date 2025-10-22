@@ -7,17 +7,21 @@ import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Slider } from "@/components/ui/slider"
 import TrajectoryPreview from "./TrajectoryPreview"
+import { PhysicsUtils } from "@/lib/physics/utils"
+import { PhysicsConfig } from "@/lib/physics/types"
 
 interface GameControlsProps {
   onShoot: (angle: number, anglePhi: number, power: number) => void
+  onTrajectoryChange?: (points: Array<{x: number; y: number, z: number}>) => void
   disabled?: boolean
   className?: string
+  courseConfig?: {config: PhysicsConfig, seed: number}
 }
 
-export default function GameControls({ onShoot, disabled = false, className = "" }: GameControlsProps) {
-  const [angle, setAngle] = useState(36) // Degrees - lower default angle // TODO: Revert bottom angle, anglePhi, power.
+export default function GameControls({ onShoot, onTrajectoryChange, disabled = false, className = "", courseConfig }: GameControlsProps) {
+  const [angle, setAngle] = useState(30) // Degrees - lower default angle
   const [anglePhi, setAnglePhi] = useState(0)  // Degrees - angling left/right.
-  const [power, setPower] = useState(0.65) // 0-1 - reduced default power
+  const [power, setPower] = useState(0.5) // 0-1 - reduced default power
   const [isDragging, setIsDragging] = useState(false)
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 })
   const controlAreaRef = useRef<HTMLDivElement>(null)
@@ -55,6 +59,14 @@ export default function GameControls({ onShoot, disabled = false, className = ""
   const handleMouseUp = useCallback(() => {
     setIsDragging(false)
   }, [])
+
+  useEffect(() => {
+    if(!onTrajectoryChange || power === 0 || !courseConfig) return
+    const angleRadians = (angle * Math.PI) / 180
+    const anglePhiRadians = (anglePhi * Math.PI) / 180
+    const points = PhysicsUtils.calculate3DTrajectoryPreview(angleRadians, anglePhiRadians, power, courseConfig.config, courseConfig.seed)
+    onTrajectoryChange(points)
+  }, [angle, anglePhi, power])
 
   useEffect(() => {
     if (isDragging) {
@@ -113,7 +125,7 @@ export default function GameControls({ onShoot, disabled = false, className = ""
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
       if (disabled) return
-
+      
       switch (e.key) {
         case "ArrowLeft":
           e.preventDefault()

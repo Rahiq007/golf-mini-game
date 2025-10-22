@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useCallback } from "react"
 import { useGameStore } from "@/lib/store/gameStore"
 import { createSimulator } from "@/lib/physics"
 import GameCanvas from "@/components/game/GameCanvas"
@@ -14,6 +14,7 @@ import { Badge } from "@/components/ui/badge"
 import Link from "next/link"
 import type { Coupon } from "@/app/api/mock/coupons/route"
 import type { ApiResponse, SessionCreateResponse, PlayResponse } from "@/lib/api/types"
+import TrajectoryPreview from "@/components/game/TrajectoryPreview"
 
 export default function PlayGolfPage() {
   const {
@@ -39,12 +40,19 @@ export default function PlayGolfPage() {
     resetGame,
   } = useGameStore()
 
+  const [simulator] = useState(() => createSimulator())
   const [simulator, setSimulator] = useState(() => createSimulator())
+  
   const [courseID, setCourseID] = useState(() => {
     const simulatorConfig = simulator.getConfig()
     console.log("[Play-Golf Page]: courseID: ", simulatorConfig.course_index)
     return simulatorConfig.course_index
   })
+  
+  const [trajectoryPreview, setTrajectoryPreview] = useState<Array<{ x: number; y: number, z: number}>>([])
+  const handleTrajectoryChange = useCallback((preview: Array<{ x: number; y: number, z: number }>) => {
+    setTrajectoryPreview(preview)
+  }, [])
 
 
   // Load coupons on mount
@@ -331,6 +339,8 @@ export default function PlayGolfPage() {
               <GameCanvas
                 trajectory={gameState === "animating" ? trajectory : undefined}
                 isAnimating={gameState === "animating"}
+                showTrajectoryPreview={true}
+                trajectoryPreview={trajectoryPreview}
                 onAnimationComplete={handleAnimationComplete}
                 courseID={courseID}
                 className="h-96 lg:h-[500px]"
@@ -339,7 +349,12 @@ export default function PlayGolfPage() {
 
             {/* Game Controls */}
             <div className="space-y-4">
-              <GameControls onShoot={handleShoot} disabled={gameState === "animating" || isLoading} />
+              <GameControls
+                onShoot={handleShoot}
+                onTrajectoryChange={handleTrajectoryChange}
+                disabled={gameState === "animating" || isLoading}
+                courseConfig={{config: simulator.getConfig(), seed: useGameStore.getState().sessionSeed || 0}}
+              />
 
               {/* Session Info */}
               <Card className="p-4">
