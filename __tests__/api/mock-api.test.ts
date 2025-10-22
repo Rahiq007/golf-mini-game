@@ -1,10 +1,10 @@
 import { POST as createSession } from "@/app/api/mock/session/route"
 import { POST as playGame } from "@/app/api/mock/play/route"
 import { GET as getCoupons } from "@/app/api/mock/coupons/route"
-import type { NextRequest } from "next/server"
+import { NextRequest } from "next/server"
 
 // Mock NextRequest helper
-function createMockRequest(method: string, body?: any, searchParams?: Record<string, string>) {
+function createMockRequest(method: string, body?: any, searchParams?: Record<string, string>): NextRequest {
   const url = new URL("http://localhost:3000/api/test")
   if (searchParams) {
     Object.entries(searchParams).forEach(([key, value]) => {
@@ -12,13 +12,16 @@ function createMockRequest(method: string, body?: any, searchParams?: Record<str
     })
   }
 
-  return {
+  const headers = new Headers()
+  const request = {
     method,
     json: async () => body,
     nextUrl: url,
     ip: "127.0.0.1",
-    headers: new Headers(),
-  } as NextRequest
+    headers,
+  } as unknown as NextRequest
+
+  return request
 }
 
 describe("Mock API Endpoints", () => {
@@ -28,11 +31,11 @@ describe("Mock API Endpoints", () => {
       const data = await response.json()
 
       expect(data.success).toBe(true)
-      expect(data.coupons).toHaveLength(5)
-      expect(data.coupons[0]).toHaveProperty("id")
-      expect(data.coupons[0]).toHaveProperty("title")
-      expect(data.coupons[0]).toHaveProperty("type")
-      expect(data.coupons[0]).toHaveProperty("value")
+      expect(data.data.coupons).toHaveLength(5)
+      expect(data.data.coupons[0]).toHaveProperty("id")
+      expect(data.data.coupons[0]).toHaveProperty("title")
+      expect(data.data.coupons[0]).toHaveProperty("type")
+      expect(data.data.coupons[0]).toHaveProperty("value")
     })
   })
 
@@ -76,6 +79,7 @@ describe("Mock API Endpoints", () => {
       // Create a session first
       const sessionRequest = createMockRequest("POST", {
         couponIds: ["c1", "c2", "c3", "c4", "c5"],
+        clientInfo: { timestamp: Date.now() },
       })
 
       const sessionResponse = await createSession(sessionRequest)
@@ -89,8 +93,10 @@ describe("Mock API Endpoints", () => {
         sessionId,
         input: {
           angle: Math.PI / 6,
+          anglePhi: 0,
           power: 0.8,
           timestamp: Date.now(),
+          courseID: 0,
         },
       })
 
@@ -111,8 +117,10 @@ describe("Mock API Endpoints", () => {
         sessionId,
         input: {
           angle: 0.2617993877991494, // ~15 degrees
+          anglePhi: 0,
           power: 0.85,
           timestamp: Date.now(),
+          courseID: 0,
         },
       })
 
@@ -132,8 +140,10 @@ describe("Mock API Endpoints", () => {
         sessionId: "invalid-session",
         input: {
           angle: 0,
+          anglePhi: 0,
           power: 0.5,
           timestamp: Date.now(),
+          courseID: 0,
         },
       })
 
@@ -150,8 +160,10 @@ describe("Mock API Endpoints", () => {
         sessionId,
         input: {
           angle: Math.PI, // 180 degrees - invalid
+          anglePhi: 0,
           power: 0.5,
           timestamp: Date.now(),
+          courseID: 0,
         },
       })
 

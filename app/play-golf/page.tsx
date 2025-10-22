@@ -40,7 +40,7 @@ export default function PlayGolfPage() {
     resetGame,
   } = useGameStore()
 
-  const [simulator] = useState(() => createSimulator())
+  // const [simulator] = useState(() => createSimulator())
   const [simulator, setSimulator] = useState(() => createSimulator())
   
   const [courseID, setCourseID] = useState(() => {

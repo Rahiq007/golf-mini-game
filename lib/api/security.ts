@@ -10,7 +10,7 @@ export const DEFAULT_SECURITY_CONFIG: SecurityConfig = {
   maxSessionsPerIP: 5,
   sessionTimeoutMinutes: 30,
   maxPlaysPerSession: 1,
-  replayProtectionWindowMs: 5000, // 5 seconds
+  replayProtectionWindowMs: 60000, // 60 seconds
   suspiciousPlayThreshold: 3,
 }
 
