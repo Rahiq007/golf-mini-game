@@ -98,9 +98,9 @@ export class GolfPhysicsSimulator {
     const initialSpeed = input.power * this.config.VMAX
     
     const initialVelocity: Vector3D = {
-      x: Math.cos(input.angle) * initialSpeed * Math.cos(input.anglePhi),    // Updated to include anglePhi.
-      y: Math.sin(input.angle) * initialSpeed,
-      z: Math.cos(input.angle) * initialSpeed * Math.sin(input.anglePhi) * (-1)   // TODO: Updated to include anglePhi in z coordinate.
+      x: this.roundTo4(Math.cos(input.angle) * initialSpeed * Math.cos(input.anglePhi)),
+      y: this.roundTo4(Math.sin(input.angle) * initialSpeed),
+      z: this.roundTo4(Math.cos(input.angle) * initialSpeed * Math.sin(input.anglePhi) * (-1))
     }
 
     // Generate deterministic wind effect
@@ -206,12 +206,12 @@ export class GolfPhysicsSimulator {
       currentState.spin *= 0.99
 
       // Round values for cross-platform determinism
-      currentState.position.x = Math.round(currentState.position.x * 10000) / 10000
-      currentState.position.y = Math.round(currentState.position.y * 10000) / 10000
-      currentState.velocity.x = Math.round(currentState.velocity.x * 10000) / 10000
-      currentState.velocity.y = Math.round(currentState.velocity.y * 10000) / 10000
-      currentState.position.z = Math.round(currentState.position.z * 10000) / 10000
-      currentState.velocity.z = Math.round(currentState.velocity.z * 10000) / 10000
+      currentState.position.x = this.roundTo4(currentState.position.x)
+      currentState.position.y = this.roundTo4(currentState.position.y)
+      currentState.velocity.x = this.roundTo4(currentState.velocity.x)
+      currentState.velocity.y = this.roundTo4(currentState.velocity.y)
+      currentState.position.z = this.roundTo4(currentState.position.z)
+      currentState.velocity.z = this.roundTo4(currentState.velocity.z)
 
 
       // Track maximum height and distance
@@ -329,6 +329,10 @@ export class GolfPhysicsSimulator {
       time: state.time,
       isRolling: state.isRolling,
     }
+  }
+
+  private roundTo4(value: number): number {
+    return Math.round(value * 10000) / 10000
   }
 
   // Get debug information about the simulation
