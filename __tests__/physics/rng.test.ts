@@ -210,18 +210,11 @@ describe("SeededRNG - Comprehensive Tests", () => {
     it("should produce known sequence for known seed", () => {
       const rng = new SeededRNG(12345)
       const expectedFirst5 = [
-        // 0.6011037379410118,
-        // 0.5158445693086833,
-        // 0.7964649512432516,
-        // 0.08835208695381880,
-        //0.4347027358505875
-
-        // Updated expected values based on current implementation
-        0.9797282677609473,
-        0.3067522644996643,
-        0.484205421525985,
-        0.817934412509203,
-        0.5094283693470061
+        0.6011037379410118,
+        0.5158445693086833,
+        0.7964649512432516,
+        0.08835208695381880,
+        0.4347027358505875
       ]
       
       const actual = Array.from({ length: 5 }, () => rng.next())

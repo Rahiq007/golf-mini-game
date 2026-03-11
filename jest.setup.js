@@ -67,11 +67,24 @@ jest.mock("framer-motion", () => ({
 }))
 
 // Mock localStorage
+const localStorageStore = {}
 const localStorageMock = {
-  getItem: jest.fn(),
-  setItem: jest.fn(),
-  removeItem: jest.fn(),
-  clear: jest.fn(),
+  getItem: jest.fn((key) => (Object.prototype.hasOwnProperty.call(localStorageStore, key) ? localStorageStore[key] : null)),
+  setItem: jest.fn((key, value) => {
+    localStorageStore[key] = String(value)
+  }),
+  removeItem: jest.fn((key) => {
+    delete localStorageStore[key]
+  }),
+  clear: jest.fn(() => {
+    Object.keys(localStorageStore).forEach((key) => {
+      delete localStorageStore[key]
+    })
+  }),
+  key: jest.fn((index) => Object.keys(localStorageStore)[index] ?? null),
+  get length() {
+    return Object.keys(localStorageStore).length
+  },
 }
 Object.defineProperty(window, "localStorage", {
   value: localStorageMock,
