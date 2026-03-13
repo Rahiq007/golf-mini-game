@@ -90,6 +90,18 @@ Object.defineProperty(window, "localStorage", {
   value: localStorageMock,
 })
 
+class ResizeObserverMock {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+}
+
+Object.defineProperty(globalThis, "ResizeObserver", {
+  writable: true,
+  configurable: true,
+  value: ResizeObserverMock,
+})
+
 // Mock clipboard API
 Object.assign(navigator, {
   clipboard: {
