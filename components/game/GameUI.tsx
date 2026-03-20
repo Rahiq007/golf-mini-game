@@ -144,7 +144,7 @@ const GameUI: React.FC<GameUIProps> = ({
       {/* Result Modal */}
       <ResultModal
         isOpen={gameState === 'result'}
-        result={gameResult || 'lose'}
+        result={(gameResult as 'win' | 'lose') || 'lose'}
         awardedCoupon={awardedCoupon || undefined}
         onClose={onResultClose}
         onAddToWallet={onAddToWallet}
