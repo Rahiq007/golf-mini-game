@@ -60,8 +60,9 @@ export const sessionManager = {
       console.log(`[SESSION] Failed to update session ${sessionId}: not found`)
       return false
     }
-    Object.assign(session, updates)
-    sessions.set(sessionId, session)
+    const updatedSession = { ...session, ...updates }
+    sessions.set(sessionId, updatedSession)
+    
     console.log(`[SESSION] Updated session ${sessionId}`)
     return true
   },

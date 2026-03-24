@@ -91,7 +91,7 @@ export default function CouponPicker({
             return (
               <div
                 key={coupon.id}
-                className={`relative p-4 rounded-lg border-2 cursor-pointer transition-all duration-200 ${
+                className={`relative space-y-3 p-4 rounded-lg border-2 cursor-pointer transition-all duration-200 ${
                   isSelected
                     ? "border-green-500 bg-green-50 shadow-md scale-105"
                     : canSelect
@@ -112,23 +112,19 @@ export default function CouponPicker({
                   </div>
                 )}
 
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <Badge className={getCouponTypeColor(coupon.type)}>{coupon.type.toUpperCase()}</Badge>
-                    <div className="text-lg font-bold text-gray-900">{formatCouponValue(coupon)}</div>
-                  </div>
-
-                  <div>
-                    <h3 className="font-semibold text-gray-900 mb-1">{coupon.title}</h3>
-                    <p className="text-sm text-gray-600">{coupon.description}</p>
-                  </div>
-
-                  {coupon.metadata.minPurchase && (
-                    <div className="text-xs text-gray-500">Min. purchase: ${coupon.metadata.minPurchase}</div>
-                  )}
-
-                  <div className="text-xs text-gray-400">Expires: {coupon.expiry}</div>
+                <div className="flex items-center justify-between">
+                  <Badge className={getCouponTypeColor(coupon.type)}>{coupon.type.toUpperCase()}</Badge>
+                  <div className="text-lg font-bold text-gray-900">{formatCouponValue(coupon)}</div>
                 </div>
+
+                <h3 className="font-semibold text-gray-900">{coupon.title}</h3>
+                <p className="text-sm text-gray-600">{coupon.description}</p>
+
+                {coupon.metadata.minPurchase && (
+                  <p className="text-xs text-gray-500">Min. purchase: ${coupon.metadata.minPurchase}</p>
+                )}
+
+                <p className="text-xs text-gray-400">Expires: {coupon.expiry}</p>
               </div>
             )
           })}

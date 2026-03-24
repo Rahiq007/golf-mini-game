@@ -103,8 +103,8 @@ const GameUI: React.FC<GameUIProps> = ({
       {(gameState === 'playing' || gameState === 'animating') && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Placeholder for GameCanvas */}
-          <div className="lg:col-span-2 h-96 lg:h-[500px] bg-gray-200 rounded-lg">
-            {/* GameCanvas will be rendered here */}
+          <div className="lg:col-span-2 h-96 lg:h-[500px] bg-gray-200 rounded-lg flex items-center justify-center text-sm text-gray-500">
+            GameCanvas will be rendered here
           </div>
 
           {/* Game Controls */}
@@ -144,7 +144,7 @@ const GameUI: React.FC<GameUIProps> = ({
       {/* Result Modal */}
       <ResultModal
         isOpen={gameState === 'result'}
-        result={gameResult || 'lose'}
+        result={(gameResult as 'win' | 'lose') || 'lose'}
         awardedCoupon={awardedCoupon || undefined}
         onClose={onResultClose}
         onAddToWallet={onAddToWallet}

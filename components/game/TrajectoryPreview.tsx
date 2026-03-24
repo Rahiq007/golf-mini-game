@@ -61,7 +61,7 @@ export default function TrajectoryPreview({ angle, power, maxVelocity = 30, clas
           Angle: {Math.round((angle * 180) / Math.PI)}°
         </text>
         <text x="10" y="35" fill="rgba(255, 255, 255, 0.9)" fontSize="12" fontFamily="monospace">
-          Power: {Math.round(power * 100)}%
+          Power level: {Math.round(power * 100)}%
         </text>
       </svg>
     </div>

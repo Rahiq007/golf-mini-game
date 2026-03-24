@@ -11,11 +11,19 @@ export class PhysicsUtils {
     steps = 50,
   ): Vector2D[] {
     const initialSpeed = power * maxVelocity
+    if (initialSpeed <= 0 || steps <= 0) {
+      return [{ x: 0, y: 0 }]
+    }
+
     const vx = Math.cos(angle) * initialSpeed
     const vy = Math.sin(angle) * initialSpeed
 
     // Calculate flight time (when ball hits ground)
     const flightTime = (2 * vy) / gravity
+    if (flightTime <= 0) {
+      return [{ x: 0, y: 0 }]
+    }
+
     const timeStep = flightTime / steps
 
     const points: Vector2D[] = []
@@ -24,6 +32,11 @@ export class PhysicsUtils {
       const t = i * timeStep
       const x = vx * t
       const y = vy * t - 0.5 * gravity * t * t
+
+      if (i === steps) {
+        points.push({ x, y: 0 })
+        continue
+      }
 
       if (y >= 0) {
         points.push({ x, y })
@@ -70,10 +83,12 @@ export class PhysicsUtils {
 
     const points: Vector3D[] = []
     let time = 0
+    const maxSteps = Math.floor(config.maxSimTime / config.timestep)
 
     points.push({ ...position })
 
-    while (time < config.maxSimTime && position.y >= 0) { // Stop trajectory simulation after touching the ground
+    // Use a step counter to avoid floating-point drift near maxSimTime.
+    for (let step = 0; step < maxSteps && position.y >= 0; step++) {
       time += config.timestep
 
       // Reset acceleration
@@ -123,6 +138,7 @@ export class PhysicsUtils {
 
       points.push({ ...position })
     }
+
     return points
   }
 
@@ -187,6 +203,10 @@ export class PhysicsUtils {
     gravity = 9.81,
   ): { angle: number; power: number; isReachable: boolean } {
     const distance = Math.sqrt(targetX * targetX + targetY * targetY)
+    if (distance === 0) {
+      return { angle: 0, power: 0, isReachable: true }
+    }
+
     const maxRange = (maxVelocity * maxVelocity) / gravity
 
     if (distance > maxRange) {
@@ -194,9 +214,15 @@ export class PhysicsUtils {
     }
 
     // Calculate optimal angle for maximum range
-    const optimalAngle = Math.asin(Math.sqrt(distance * gravity) / maxVelocity) / 2
-    const requiredSpeed = Math.sqrt((distance * gravity) / Math.sin(2 * optimalAngle))
-    const power = Math.min(requiredSpeed / maxVelocity, 1)
+    const clampedRatio = Math.min(Math.sqrt(distance * gravity) / maxVelocity, 1)
+    const optimalAngle = Math.asin(clampedRatio) / 2
+    const sinDoubleAngle = Math.sin(2 * optimalAngle)
+    if (sinDoubleAngle <= 0) {
+      return { angle: optimalAngle, power: 0, isReachable: true }
+    }
+
+    const requiredSpeed = Math.sqrt((distance * gravity) / sinDoubleAngle)
+    const power = Number.isFinite(requiredSpeed) ? Math.min(requiredSpeed / maxVelocity, 1) : 0
 
     return {
       angle: optimalAngle,

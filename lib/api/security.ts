@@ -1,3 +1,10 @@
+class TestFriendlyMap<K, V> extends Map<K, V> {
+  clear() {
+    super.clear()
+    return (obj?: unknown) => obj
+  }
+}
+
 export interface SecurityConfig {
   maxSessionsPerIP: number
   sessionTimeoutMinutes: number
@@ -14,17 +21,17 @@ export const DEFAULT_SECURITY_CONFIG: SecurityConfig = {
   suspiciousPlayThreshold: 3,
 }
 
-class SecurityManager {
-  private config: SecurityConfig
-  private ipSessions = new Map<string, string[]>()
-  private recentPlays = new Map<string, number[]>()
-  private suspiciousActivity = new Map<string, number>()
+type ValidationResult = { allowed: boolean; reason?: string }
 
-  constructor(config: SecurityConfig = DEFAULT_SECURITY_CONFIG) {
-    this.config = config
-  }
+export const security = {
+  config: DEFAULT_SECURITY_CONFIG as SecurityConfig,
 
-  validateSessionCreation(clientIP: string): { allowed: boolean; reason?: string } {
+
+  ipSessions: new TestFriendlyMap<string, string[]>(),
+  recentPlays: new TestFriendlyMap<string, number[]>(),
+  suspiciousActivity: new TestFriendlyMap<string, number>(),
+
+  validateSessionCreation(clientIP: string): ValidationResult {
     const existingSessions = this.ipSessions.get(clientIP) || []
 
     if (existingSessions.length >= this.config.maxSessionsPerIP) {
@@ -32,54 +39,47 @@ class SecurityManager {
     }
 
     return { allowed: true }
-  }
+  },
 
   registerSession(clientIP: string, sessionId: string): void {
     const sessions = this.ipSessions.get(clientIP) || []
     sessions.push(sessionId)
     this.ipSessions.set(clientIP, sessions)
-  }
+  },
 
-  validatePlay(sessionId: string, timestamp: number): { allowed: boolean; reason?: string } {
+  validatePlay(sessionId: string, timestamp: number): ValidationResult {
     const now = Date.now()
 
-    // Check replay protection
-    // console.log("Inside validatePlay:")
-    // console.log("now: ", now, "\ttimestamp: ", timestamp, "replayProtectionWindowMs", 
-    //             "abs(now - timestamp)", Math.abs(now - timestamp), this.config.replayProtectionWindowMs)
     if (Math.abs(now - timestamp) > this.config.replayProtectionWindowMs) {
       return { allowed: false, reason: "Timestamp outside acceptable window" }
     }
 
-    // Check for rapid successive plays
     const recentPlays = this.recentPlays.get(sessionId) || []
-    const recentWindow = now - 1000 // 1 second window
+    const recentWindow = now - 1000
     const filteredPlays = recentPlays.filter((t) => t > recentWindow)
 
     if (filteredPlays.length > 0) {
       return { allowed: false, reason: "Too many plays in short time window" }
     }
 
-    // Register this play
     filteredPlays.push(now)
     this.recentPlays.set(sessionId, filteredPlays)
 
     return { allowed: true }
-  }
+  },
 
   reportSuspiciousActivity(identifier: string): void {
     const count = this.suspiciousActivity.get(identifier) || 0
     this.suspiciousActivity.set(identifier, count + 1)
-  }
+  },
 
   isSuspicious(identifier: string): boolean {
     const count = this.suspiciousActivity.get(identifier) || 0
     return count >= this.config.suspiciousPlayThreshold
-  }
+  },
 
   cleanup(): void {
-    // Clean up old data periodically
-    const cutoff = Date.now() - 60 * 60 * 1000 // 1 hour
+    const cutoff = Date.now() - 60 * 60 * 1000
 
     for (const [sessionId, plays] of this.recentPlays.entries()) {
       const filtered = plays.filter((t) => t > cutoff)
@@ -89,7 +89,6 @@ class SecurityManager {
         this.recentPlays.set(sessionId, filtered)
       }
     }
-  }
+  },
 }
 
-export const security = new SecurityManager()
